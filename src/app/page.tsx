@@ -1,31 +1,34 @@
-import { Counter } from "@/components/counter";
 import { Button } from "@/components/ui/button";
 import SplitText from "@/components/ui/split-text";
-import { WaitlistForm } from "@/components/waitlist-form";
+import QuickJoinForm from '@/components/QuickJoinForm'; // Changed this line
+import Header from "@/components/header"
 import Link from "next/link";
 import { FaGithub } from "react-icons/fa";
 
 export default function Home() {
   return (
-    <div className="flex flex-col h-screen justify-center items-center text-center">
-      <div className="mb-8">
-        <SplitText className="text-5xl tracking-tighter font-medium">
-          Get early access
-        </SplitText>
-        <SplitText className="tracking-tight text-xl">
-          Be amongst the first to experience our services.
-        </SplitText>
-      </div>
-      <WaitlistForm />
-      <div className="mt-4">
-        <Counter />
-      </div>
-      <footer className="sticky top-[100vh]">
-        <Button size="icon" variant="ghost">
-          <Link href="https://github.com/zeitgg/zeitlist" target="_blank">
-            <FaGithub />
-          </Link>
-        </Button>
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-1 flex flex-col justify-center items-center text-center px-4">
+        <div className="mb-8">
+          <SplitText className="text-5xl tracking-tighter font-medium">
+            Let's line up
+          </SplitText>
+          <SplitText className="tracking-tight text-xl">
+            Save your time.
+          </SplitText>
+        </div>
+        <QuickJoinForm />
+        <div className="mt-4">
+            <Link 
+          href="/dashboard" 
+          className="text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+        >
+          Click here to create a lining
+        </Link>
+        </div>
+      </main>
+      <footer className="flex justify-center py-4">
+       
       </footer>
     </div>
   );
