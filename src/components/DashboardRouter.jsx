@@ -272,7 +272,7 @@ const CustomerDashboardView = ({ showCreatorOption = false }) => {
     <div className="min-h-screen bg-gray-50">
       {/* REMOVED THE DUPLICATE HEADER - No internal header at all */}
       
-      <div className="max-w-4xl mx-auto p-6 pt-8">
+      <div className="max-w-4xl mx-auto p-6 pt-20">
         {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Lines</h1>
