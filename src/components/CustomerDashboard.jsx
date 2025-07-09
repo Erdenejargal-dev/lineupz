@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Clock, MapPin, RefreshCw, LogOut, Plus, QrCode } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
 const CustomerDashboard = () => {
   const [myQueue, setMyQueue] = useState([]);

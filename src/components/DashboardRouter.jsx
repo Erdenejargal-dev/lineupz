@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Users, Clock, QrCode, LogOut, Plus, Eye, EyeOff, UserCheck, TrendingUp, MapPin } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
 const DashboardRouter = () => {
   const [user, setUser] = useState(null);
