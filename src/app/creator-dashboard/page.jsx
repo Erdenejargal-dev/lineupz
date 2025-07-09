@@ -797,25 +797,28 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
       </div>
 
       {/* Schedule Section */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
+      <div className="border-t pt-4">
+        <div className="flex items-center justify-between mb-3">
           <label className="block text-sm font-medium text-gray-700">
             Operating Hours
           </label>
           <button
             type="button"
             onClick={() => setShowSchedule(!showSchedule)}
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
           >
             {showSchedule ? 'Hide Schedule' : 'Set Schedule'}
           </button>
         </div>
         
         {showSchedule && (
-          <div className="border border-gray-200 rounded-lg p-4 space-y-3 max-h-60 overflow-y-auto">
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50">
+            <div className="text-sm text-gray-600 mb-3">
+              Set your line's operating hours for each day of the week:
+            </div>
             {formData.schedule.map((day, index) => (
               <div key={day.day} className="flex items-center gap-3">
-                <div className="w-24">
+                <div className="w-24 flex-shrink-0">
                   <label className="flex items-center">
                     <input
                       type="checkbox"
@@ -834,7 +837,7 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
                         type="time"
                         value={day.startTime}
                         onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
                     </div>
                     <span className="text-gray-500 text-sm">to</span>
@@ -843,13 +846,29 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
                         type="time"
                         value={day.endTime}
                         onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
                     </div>
                   </>
                 )}
+                
+                {!day.isAvailable && (
+                  <div className="flex-1 text-center text-sm text-gray-500">
+                    Closed
+                  </div>
+                )}
               </div>
             ))}
+            
+            <div className="text-xs text-gray-500 mt-2">
+              💡 Tip: Your line will only be available during these hours. People can't join outside these times.
+            </div>
+          </div>
+        )}
+        
+        {!showSchedule && (
+          <div className="text-sm text-gray-500 italic">
+            Click "Set Schedule" to configure operating hours (optional)
           </div>
         )}
       </div>
