@@ -7,7 +7,7 @@ import {
   TrendingUp, Calendar, User
 } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const CreatorDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -725,7 +725,7 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-96 overflow-y-auto">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Line Title *
@@ -812,10 +812,10 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
         </div>
         
         {showSchedule && (
-          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3 max-h-60 overflow-y-auto">
             {formData.schedule.map((day, index) => (
               <div key={day.day} className="flex items-center gap-3">
-                <div className="w-20">
+                <div className="w-24">
                   <label className="flex items-center">
                     <input
                       type="checkbox"
@@ -871,6 +871,105 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
         </button>
       </div>
     </form>
+  );
+};
+
+// Line Management Component
+const LineManagement = ({ line, queueData, queueLoading, onMarkVisited, onRemoveFromQueue, onRefresh }) => {
+  const [activeTab, setActiveTab] = useState('queue');
+
+  if (queueLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <RefreshCw className="h-8 w-8 animate-spin text-gray-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Line Info */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-900">{line.title}</h3>
+            <p className="text-sm text-gray-600">{line.description}</p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-blue-600">{line.lineCode}</div>
+            <div className="text-sm text-gray-500">Line Code</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="text-center p-4 bg-blue-50 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600">{queueData?.totalInQueue || 0}</div>
+          <div className="text-sm text-gray-600">In Queue</div>
+        </div>
+        <div className="text-center p-4 bg-green-50 rounded-lg">
+          <div className="text-2xl font-bold text-green-600">{queueData?.stats?.totalServed || 0}</div>
+          <div className="text-sm text-gray-600">Served Today</div>
+        </div>
+        <div className="text-center p-4 bg-orange-50 rounded-lg">
+          <div className="text-2xl font-bold text-orange-600">{queueData?.stats?.estimatedWaitTime || 0}m</div>
+          <div className="text-sm text-gray-600">Est. Wait</div>
+        </div>
+      </div>
+
+      {/* Refresh Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={onRefresh}
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </button>
+      </div>
+
+      {/* Queue List */}
+      <div className="space-y-3">
+        <h4 className="font-semibold text-gray-900">Current Queue</h4>
+        {queueData?.queue?.length > 0 ? (
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {queueData.queue.map((person, index) => (
+              <div key={person._id} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-semibold text-blue-600">{index + 1}</span>
+                  </div>
+                  <div>
+                    <div className="font-medium">{person.name || 'Anonymous'}</div>
+                    <div className="text-sm text-gray-500">ID: {person.userId}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onMarkVisited(person._id)}
+                    className="px-3 py-1 text-sm bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                  >
+                    Mark Visited
+                  </button>
+                  <button
+                    onClick={() => onRemoveFromQueue(person._id)}
+                    className="px-3 py-1 text-sm bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>No one in queue yet</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
