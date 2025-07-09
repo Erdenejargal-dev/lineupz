@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Users, Clock, TrendingUp, Settings, QrCode, Eye, EyeOff, Trash2, UserCheck, LogOut, RefreshCw } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
 const CreatorDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
