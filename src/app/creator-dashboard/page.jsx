@@ -796,6 +796,20 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
         </select>
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Code Type
+        </label>
+        <select
+          value={formData.codeType}
+          onChange={(e) => setFormData({...formData, codeType: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="stable">Stable (permanent code)</option>
+          <option value="temporary">Temporary (expires in 24h)</option>
+        </select>
+      </div>
+
       {/* Schedule Section */}
       <div className="border-t pt-4">
         <div className="flex items-center justify-between mb-3">
