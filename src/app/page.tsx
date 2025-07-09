@@ -10,10 +10,10 @@ export default function Home() {
     <div className="min-h-screen bg-white dark:bg-slate-50 flex flex-col">
       <main className="flex-1 flex flex-col justify-center items-center text-center px-4">
         <div className="mb-8">
-          <SplitText className="text-5xl tracking-tighter font-medium">
-            Let's line up
+          <SplitText className="text-5xl text-slate-900 tracking-tighter font-medium">
+            Let’s get in queue
           </SplitText>
-          <SplitText className="tracking-tight text-xl">
+          <SplitText className="tracking-tight text-slate-800 text-xl">
             Save your time.
           </SplitText>
         </div>
