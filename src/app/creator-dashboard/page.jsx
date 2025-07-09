@@ -7,7 +7,7 @@ import {
   TrendingUp, Calendar, User
 } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const CreatorDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -668,8 +668,25 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
     description: '',
     maxCapacity: 50,
     estimatedServiceTime: 5,
-    codeType: 'stable'
+    codeType: 'stable',
+    schedule: [
+      { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'tuesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'wednesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'thursday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+      { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+    ]
   });
+
+  const [showSchedule, setShowSchedule] = useState(false);
+
+  const updateSchedule = (dayIndex, field, value) => {
+    const newSchedule = [...formData.schedule];
+    newSchedule[dayIndex] = { ...newSchedule[dayIndex], [field]: value };
+    setFormData({ ...formData, schedule: newSchedule });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -681,15 +698,34 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
         description: '',
         maxCapacity: 50,
         estimatedServiceTime: 5,
-        codeType: 'stable'
+        codeType: 'stable',
+        schedule: [
+          { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'tuesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'wednesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'thursday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+          { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+        ]
       });
     } catch (error) {
       // Error is handled by parent component
     }
   };
 
+  const dayNames = {
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday'
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-96 overflow-y-auto">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Line Title *
@@ -758,6 +794,64 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
           <option value="stable">Stable (permanent code)</option>
           <option value="temporary">Temporary (expires in 24h)</option>
         </select>
+      </div>
+
+      {/* Schedule Section */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Operating Hours
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowSchedule(!showSchedule)}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            {showSchedule ? 'Hide Schedule' : 'Set Schedule'}
+          </button>
+        </div>
+        
+        {showSchedule && (
+          <div className="border border-gray-200 rounded-lg p-4 space-y-3">
+            {formData.schedule.map((day, index) => (
+              <div key={day.day} className="flex items-center gap-3">
+                <div className="w-20">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={day.isAvailable}
+                      onChange={(e) => updateSchedule(index, 'isAvailable', e.target.checked)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm font-medium capitalize">{dayNames[day.day]}</span>
+                  </label>
+                </div>
+                
+                {day.isAvailable && (
+                  <>
+                    <div className="flex-1">
+                      <input
+                        type="time"
+                        value={day.startTime}
+                        onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                      />
+                    </div>
+                    <span className="text-gray-500 text-sm">to</span>
+                    <div className="flex-1">
+                      <input
+                        type="time"
+                        value={day.endTime}
+                        onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3 pt-4">
