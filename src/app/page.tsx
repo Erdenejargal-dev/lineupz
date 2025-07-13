@@ -21,7 +21,7 @@ export default function Home() {
         <div className="mt-4">
             <Link 
           href="/dashboard" 
-          className="text-primary hover:text-primary/80 underline underline-offset-4 transition-colors"
+          className="text-slate-800 hover:text-slate-600 underline underline-offset-4 transition-colors"
         >
           Click here to create a lining
         </Link>
