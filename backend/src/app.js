@@ -2,7 +2,8 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-
+const appointmentRoutes = require('./routes/appointments');
+app.use('/api/appointments', appointmentRoutes);
 // Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'https://tabi.mn',

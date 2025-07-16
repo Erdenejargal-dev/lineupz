@@ -16,51 +16,82 @@ const generateLineCode = async () => {
   return code;
 };
 
-// Create a new line
 const createLine = async (req, res) => {
   try {
-    const { title, description, codeType, maxCapacity, estimatedServiceTime, schedule } = req.body;
+    const { 
+      title, 
+      description, 
+      serviceType,           // NEW FIELD
+      appointmentSettings,   // NEW FIELD
+      settings, 
+      availability, 
+      codeType 
+    } = req.body;
 
-    if (!title) {
+    // Validation
+    if (!title || !settings?.maxCapacity || !settings?.estimatedServiceTime) {
       return res.status(400).json({
         success: false,
-        message: 'Line title is required'
+        message: 'Required fields: title, maxCapacity, estimatedServiceTime'
       });
     }
 
-    // Create new line with manually generated code
-    const line = new Line({
+    // Generate unique 6-digit code
+    let lineCode;
+    let isUnique = false;
+    while (!isUnique) {
+      lineCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const existingLine = await Line.findOne({ lineCode });
+      if (!existingLine) isUnique = true;
+    }
+
+    // Prepare line data
+    const lineData = {
       creator: req.userId,
       title,
       description,
-      codeType: codeType || 'stable',
-      lineCode: await generateLineCode(), // Explicitly generate code
-      settings: {
-        maxCapacity: maxCapacity || 50,
-        estimatedServiceTime: estimatedServiceTime || 5
-      }
-    });
+      lineCode,
+      serviceType: serviceType || 'queue',    // NEW: Default to queue
+      settings,
+      availability,
+      codeType: codeType || 'stable'
+    };
 
-    // Add schedule if provided
-    if (schedule && Array.isArray(schedule)) {
-      line.availability.schedule = schedule;
+    // NEW: Only add appointmentSettings for appointment/hybrid lines
+    if (serviceType === 'appointments' || serviceType === 'hybrid') {
+      if (!appointmentSettings) {
+        return res.status(400).json({
+          success: false,
+          message: 'Appointment settings are required for appointment-based lines'
+        });
+      }
+      lineData.appointmentSettings = appointmentSettings;
     }
 
+    const line = new Line(lineData);
     await line.save();
 
-    // Update user stats
+    // Update user to be a creator if not already
     await User.findByIdAndUpdate(req.userId, {
-      $inc: { totalLinesCreated: 1 },
-      isCreator: true
+      isCreator: true,
+      $inc: { totalLinesCreated: 1 }
     });
-
-    // Populate creator info for response
-    await line.populate('creator', 'userId name businessName');
 
     res.status(201).json({
       success: true,
       message: 'Line created successfully',
-      line
+      line: {
+        _id: line._id,
+        title: line.title,
+        description: line.description,
+        lineCode: line.lineCode,
+        serviceType: line.serviceType,           // NEW
+        appointmentSettings: line.appointmentSettings, // NEW
+        settings: line.settings,
+        availability: line.availability,
+        isActive: line.isActive,
+        createdAt: line.createdAt
+      }
     });
 
   } catch (error) {
@@ -72,22 +103,21 @@ const createLine = async (req, res) => {
   }
 };
 
-// Get line by code (for joining)
 const getLineByCode = async (req, res) => {
   try {
     const { code } = req.params;
-
+    
     if (!code || code.length !== 6) {
       return res.status(400).json({
         success: false,
-        message: 'Valid 6-digit line code is required'
+        message: 'Invalid line code format'
       });
     }
 
     const line = await Line.findOne({ 
       lineCode: code, 
       isActive: true 
-    }).populate('creator', 'userId name businessName businessDescription');
+    }).populate('creator', 'name businessName');
 
     if (!line) {
       return res.status(404).json({
@@ -96,27 +126,38 @@ const getLineByCode = async (req, res) => {
       });
     }
 
-    // Check if temporary code is expired
-    if (line.codeType === 'temporary' && line.codeExpiresAt < new Date()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Line code has expired'
+    // Get current queue count for queue-based lines
+    let queueCount = 0;
+    if (line.serviceType === 'queue' || line.serviceType === 'hybrid') {
+      queueCount = await LineJoiner.countDocuments({
+        line: line._id,
+        status: 'waiting'
       });
     }
-
-    // Get current queue info
-    const queueCount = await line.getCurrentQueueCount();
-    const estimatedWaitTime = await line.getEstimatedWaitTime();
-    const isAvailable = line.isCurrentlyAvailable();
 
     // Check if user is already in this line (if authenticated)
     let userInLine = null;
     if (req.userId) {
-      userInLine = await LineJoiner.findOne({
-        user: req.userId,
-        line: line._id,
-        status: { $in: ['waiting', 'being_served'] }
-      });
+      if (line.serviceType === 'queue' || line.serviceType === 'hybrid') {
+        userInLine = await LineJoiner.findOne({
+          line: line._id,
+          user: req.userId,
+          status: 'waiting'
+        });
+      }
+      
+      // TODO: Also check for existing appointments
+      // const userAppointment = await Appointment.findOne({
+      //   line: line._id,
+      //   user: req.userId,
+      //   status: { $in: ['confirmed', 'pending'] }
+      // });
+    }
+
+    // Calculate estimated wait time
+    let estimatedWaitTime = 0;
+    if (queueCount > 0) {
+      estimatedWaitTime = queueCount * line.settings.estimatedServiceTime;
     }
 
     res.json({
@@ -126,14 +167,16 @@ const getLineByCode = async (req, res) => {
         title: line.title,
         description: line.description,
         lineCode: line.lineCode,
-        creator: line.creator.getPublicProfile(),
+        serviceType: line.serviceType,                    // NEW
+        appointmentSettings: line.appointmentSettings,   // NEW
+        creator: line.creator,
         settings: line.settings,
-        isAvailable,
+        isAvailable: line.isCurrentlyAvailable(),
         queueCount,
         estimatedWaitTime,
         userInLine: userInLine ? {
-          position: await userInLine.getCurrentPosition(),
-          estimatedWait: await userInLine.getEstimatedWaitTime(),
+          _id: userInLine._id,
+          position: userInLine.position,
           joinedAt: userInLine.joinedAt
         } : null
       }
