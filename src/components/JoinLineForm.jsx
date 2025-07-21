@@ -17,12 +17,54 @@ const JoinLineForm = () => {
   const [token, setToken] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
-  // Check for authentication on component mount
+  // Check for authentication and URL code on component mount
   React.useEffect(() => {
     setIsClient(true);
     const savedToken = localStorage.getItem('token');
     setToken(savedToken);
+    
+    // Check if there's a code in the URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const codeFromUrl = urlParams.get('code');
+    
+    if (codeFromUrl && codeFromUrl.length === 6) {
+      setLineCode(codeFromUrl);
+      // Automatically check the line code
+      checkLineCodeFromUrl(codeFromUrl, savedToken);
+    }
   }, []);
+
+  const checkLineCodeFromUrl = async (code, token) => {
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/lines/code/${code}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Line not found');
+      }
+
+      setLineInfo(data.line);
+      setMessage(`Found line: ${data.line.title}`);
+      setStep('preview');
+    } catch (error) {
+      setError(error.message);
+      // If there's an error, stay on the code entry step
+      setStep('code');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const checkLineCode = async () => {
     if (!lineCode || lineCode.length !== 6) {
@@ -74,16 +116,16 @@ const JoinLineForm = () => {
 
     switch (lineInfo.serviceType) {
       case 'queue':
-        return <QueueJoinInterface lineInfo={lineInfo} onSuccess={setQueuePosition} />;
+        return <QueueJoinInterface lineInfo={lineInfo} onSuccess={setQueuePosition} setStep={setStep} />;
       
       case 'appointments':
-        return <AppointmentBookingInterface lineInfo={lineInfo} onSuccess={setQueuePosition} />;
+        return <AppointmentBookingInterface lineInfo={lineInfo} onSuccess={setQueuePosition} setStep={setStep} />;
       
       case 'hybrid':
-        return <HybridModeInterface lineInfo={lineInfo} onSuccess={setQueuePosition} />;
+        return <HybridModeInterface lineInfo={lineInfo} onSuccess={setQueuePosition} setStep={setStep} />;
       
       default:
-        return <QueueJoinInterface lineInfo={lineInfo} onSuccess={setQueuePosition} />;
+        return <QueueJoinInterface lineInfo={lineInfo} onSuccess={setQueuePosition} setStep={setStep} />;
     }
   };
 
@@ -280,7 +322,7 @@ const LinePreviewStep = ({ lineInfo, onBack, onNext }) => (
 );
 
 // ===== 4. NEW COMPONENT: Queue Join Interface =====
-const QueueJoinInterface = ({ lineInfo, onSuccess }) => {
+const QueueJoinInterface = ({ lineInfo, onSuccess, setStep }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -310,6 +352,7 @@ const QueueJoinInterface = ({ lineInfo, onSuccess }) => {
         throw new Error(data.message || 'Failed to join line');
       }
 
+      setStep('joined');
       onSuccess(data.queueEntry);
     } catch (error) {
       setError(error.message);
