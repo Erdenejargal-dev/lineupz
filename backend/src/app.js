@@ -2,8 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const appointmentRoutes = require('./routes/appointments');
-app.use('/api/appointments', appointmentRoutes);
+
 // Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'https://tabi.mn',
@@ -34,6 +33,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/lines', require('./routes/lines'));
 app.use('/api/queue', require('./routes/queue'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/appointments', require('./routes/appointments'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

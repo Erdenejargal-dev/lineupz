@@ -29,10 +29,22 @@ const MyAppointments = ({ token }) => {
       if (response.ok) {
         setAppointments(data.appointments || []);
       } else {
-        throw new Error(data.message || 'Failed to load appointments');
+        // If appointments endpoint is not available, just show empty state
+        if (response.status === 404) {
+          setAppointments([]);
+          setError('');
+        } else {
+          throw new Error(data.message || 'Failed to load appointments');
+        }
       }
     } catch (error) {
-      setError(error.message);
+      // Handle network errors gracefully
+      if (error.message.includes('Failed to fetch') || error.message.includes('404')) {
+        setAppointments([]);
+        setError('');
+      } else {
+        setError(error.message);
+      }
     } finally {
       setLoading(false);
     }
