@@ -143,9 +143,12 @@ const getLineByCode = async (req, res) => {
       });
     }
 
+    // Ensure serviceType exists (for backward compatibility)
+    const serviceType = line.serviceType || 'queue';
+
     // Get current queue count for queue-based lines
     let queueCount = 0;
-    if (line.serviceType === 'queue' || line.serviceType === 'hybrid') {
+    if (serviceType === 'queue' || serviceType === 'hybrid') {
       queueCount = await LineJoiner.countDocuments({
         line: line._id,
         status: 'waiting'
@@ -155,7 +158,7 @@ const getLineByCode = async (req, res) => {
     // Check if user is already in this line (if authenticated)
     let userInLine = null;
     if (req.userId) {
-      if (line.serviceType === 'queue' || line.serviceType === 'hybrid') {
+      if (serviceType === 'queue' || serviceType === 'hybrid') {
         userInLine = await LineJoiner.findOne({
           line: line._id,
           user: req.userId,
@@ -171,10 +174,19 @@ const getLineByCode = async (req, res) => {
       // });
     }
 
-    // Calculate estimated wait time
+    // Calculate estimated wait time safely
     let estimatedWaitTime = 0;
     if (queueCount > 0) {
-      estimatedWaitTime = queueCount * line.settings.estimatedServiceTime;
+      estimatedWaitTime = queueCount * (line.settings?.estimatedServiceTime || 5);
+    }
+
+    // Safely check if currently available
+    let isAvailable = false;
+    try {
+      isAvailable = line.isCurrentlyAvailable();
+    } catch (err) {
+      // Fallback - just check if active
+      isAvailable = line.availability?.isActive || false;
     }
 
     res.json({
@@ -184,11 +196,11 @@ const getLineByCode = async (req, res) => {
         title: line.title,
         description: line.description,
         lineCode: line.lineCode,
-        serviceType: line.serviceType,                    // NEW
-        appointmentSettings: line.appointmentSettings,   // NEW
+        serviceType: serviceType,                         // Ensure this exists
+        appointmentSettings: line.appointmentSettings,   // May be undefined for old lines
         creator: line.creator,
         settings: line.settings,
-        isAvailable: line.isCurrentlyAvailable(),
+        isAvailable: isAvailable,
         queueCount,
         estimatedWaitTime,
         userInLine: userInLine ? {

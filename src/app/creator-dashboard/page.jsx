@@ -18,6 +18,7 @@ const CreatorDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [myLines, setMyLines] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [managingLine, setManagingLine] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -381,8 +382,7 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
   };
 
   const handleManageLine = (line) => {
-    // For now, show a simple alert with line details
-    alert(`Managing line: ${line.title} (${line.lineCode})\n\nQueue Management:\n- Current queue: ${line.queueCount || 0} people\n- Status: ${line.isAvailable ? 'Active' : 'Paused'}\n\nThis will be expanded to show full queue management interface.`);
+    setManagingLine(line);
   };
 
   const dayNames = {
@@ -409,8 +409,26 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
         </button>
       </div>
 
+      {/* Line Management Modal */}
+      {managingLine && (
+        <LineManagementModal 
+          line={managingLine} 
+          onClose={() => setManagingLine(null)}
+          onUpdate={loadDashboardData}
+        />
+      )}
+
       {/* Create Form Modal */}
       {showCreateForm && (
+        <CreateLineModal 
+          onClose={() => setShowCreateForm(false)}
+          onSubmit={handleCreateSubmit}
+          refreshing={refreshing}
+        />
+      )}
+
+      {/* Old Create Form - Remove this entire section */}
+      {false && showCreateForm && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Line</h3>
           <form onSubmit={handleCreateSubmit} className="space-y-4">
@@ -1284,6 +1302,605 @@ const LineManagement = ({ line, queueData, queueLoading, onMarkVisited, onRemove
             <p>No one in queue yet</p>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+// NEW: Create Line Modal with Tabs
+const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
+  const [activeTab, setActiveTab] = useState('queue');
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    maxCapacity: 50,
+    estimatedServiceTime: 5,
+    serviceType: 'queue',
+    codeType: 'stable',
+    schedule: [
+      { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'tuesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'wednesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'thursday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+      { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+    ],
+    appointmentSettings: {
+      duration: 30,
+      slotInterval: 30,
+      advanceBookingDays: 7,
+      bufferTime: 5,
+      cancellationHours: 2,
+      autoConfirm: true,
+      maxConcurrentAppointments: 1
+    }
+  });
+
+  const updateSchedule = (dayIndex, field, value) => {
+    const newSchedule = [...formData.schedule];
+    newSchedule[dayIndex] = { ...newSchedule[dayIndex], [field]: value };
+    setFormData({ ...formData, schedule: newSchedule });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const submitData = { ...formData, serviceType: activeTab };
+    await onSubmit(submitData);
+    onClose();
+  };
+
+  const dayNames = {
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday'
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900">Create New Line</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Service Type Tabs */}
+          <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
+            {[
+              { id: 'queue', name: 'Queue Only', icon: '🏃', desc: 'Traditional line system' },
+              { id: 'appointments', name: 'Appointments', icon: '📅', desc: 'Time slot booking' },
+              { id: 'hybrid', name: 'Hybrid', icon: '🔄', desc: 'Both options' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex flex-col items-center py-3 px-4 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <span className="text-lg mb-1">{tab.icon}</span>
+                <span className="font-medium">{tab.name}</span>
+                <span className="text-xs text-gray-500">{tab.desc}</span>
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Line Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={
+                    activeTab === 'queue' ? 'Coffee Shop Queue' :
+                    activeTab === 'appointments' ? 'Hair Salon Appointments' :
+                    'Restaurant Service'
+                  }
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                  placeholder={
+                    activeTab === 'queue' ? 'Queue for coffee orders and pickup' :
+                    activeTab === 'appointments' ? 'Professional hair styling and cuts' :
+                    'Dine-in and takeout orders'
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Max Capacity
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="200"
+                  value={formData.maxCapacity}
+                  onChange={(e) => setFormData({...formData, maxCapacity: parseInt(e.target.value)})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service Time (minutes)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="240"
+                  value={formData.estimatedServiceTime}
+                  onChange={(e) => setFormData({...formData, estimatedServiceTime: parseInt(e.target.value)})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Appointment Settings - Only show for appointments/hybrid */}
+            {(activeTab === 'appointments' || activeTab === 'hybrid') && (
+              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                <h4 className="font-medium text-blue-900 mb-4">Appointment Settings</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Appointment Duration
+                    </label>
+                    <select
+                      value={formData.appointmentSettings.duration}
+                      onChange={(e) => setFormData({
+                        ...formData, 
+                        appointmentSettings: {
+                          ...formData.appointmentSettings,
+                          duration: parseInt(e.target.value)
+                        }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={15}>15 minutes</option>
+                      <option value={30}>30 minutes</option>
+                      <option value={45}>45 minutes</option>
+                      <option value={60}>1 hour</option>
+                      <option value={90}>1.5 hours</option>
+                      <option value={120}>2 hours</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Time Slot Interval
+                    </label>
+                    <select
+                      value={formData.appointmentSettings.slotInterval}
+                      onChange={(e) => setFormData({
+                        ...formData, 
+                        appointmentSettings: {
+                          ...formData.appointmentSettings,
+                          slotInterval: parseInt(e.target.value)
+                        }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={15}>Every 15 minutes</option>
+                      <option value={30}>Every 30 minutes</option>
+                      <option value={60}>Every hour</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Advance Booking
+                    </label>
+                    <select
+                      value={formData.appointmentSettings.advanceBookingDays}
+                      onChange={(e) => setFormData({
+                        ...formData, 
+                        appointmentSettings: {
+                          ...formData.appointmentSettings,
+                          advanceBookingDays: parseInt(e.target.value)
+                        }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={1}>1 day ahead</option>
+                      <option value={3}>3 days ahead</option>
+                      <option value={7}>1 week ahead</option>
+                      <option value={14}>2 weeks ahead</option>
+                      <option value={30}>1 month ahead</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cancellation Policy
+                    </label>
+                    <select
+                      value={formData.appointmentSettings.cancellationHours}
+                      onChange={(e) => setFormData({
+                        ...formData, 
+                        appointmentSettings: {
+                          ...formData.appointmentSettings,
+                          cancellationHours: parseInt(e.target.value)
+                        }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={1}>1 hour before</option>
+                      <option value={2}>2 hours before</option>
+                      <option value={4}>4 hours before</option>
+                      <option value={24}>24 hours before</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.appointmentSettings.autoConfirm}
+                      onChange={(e) => setFormData({
+                        ...formData, 
+                        appointmentSettings: {
+                          ...formData.appointmentSettings,
+                          autoConfirm: e.target.checked
+                        }
+                      })}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">Auto-confirm appointments</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Operating Hours */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Operating Hours</h4>
+              <div className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50">
+                {formData.schedule.map((day, index) => (
+                  <div key={day.day} className="flex items-center gap-3">
+                    <div className="w-24 flex-shrink-0">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={day.isAvailable}
+                          onChange={(e) => updateSchedule(index, 'isAvailable', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium">{dayNames[day.day]}</span>
+                      </label>
+                    </div>
+                    
+                    {day.isAvailable ? (
+                      <>
+                        <input
+                          type="time"
+                          value={day.startTime}
+                          onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                        <span className="text-gray-500 text-sm">to</span>
+                        <input
+                          type="time"
+                          value={day.endTime}
+                          onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </>
+                    ) : (
+                      <div className="flex-1 text-center text-sm text-gray-500">Closed</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Form Actions */}
+            <div className="flex gap-3 pt-4 border-t">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={refreshing}
+                className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
+              >
+                {refreshing ? 'Creating...' : `Create ${activeTab === 'queue' ? 'Queue' : activeTab === 'appointments' ? 'Appointment Line' : 'Hybrid Line'}`}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// NEW: Line Management Modal
+const LineManagementModal = ({ line, onClose, onUpdate }) => {
+  const [activeTab, setActiveTab] = useState('details');
+  const [editData, setEditData] = useState({
+    title: line.title || '',
+    description: line.description || '',
+    maxCapacity: line.settings?.maxCapacity || 50,
+    estimatedServiceTime: line.settings?.estimatedServiceTime || 5,
+    schedule: line.availability?.schedule || [
+      { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'tuesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'wednesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'thursday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+      { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+    ]
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const updateSchedule = (dayIndex, field, value) => {
+    const newSchedule = [...editData.schedule];
+    newSchedule[dayIndex] = { ...newSchedule[dayIndex], [field]: value };
+    setEditData({ ...editData, schedule: newSchedule });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/lines/${line._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editData)
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update line');
+      }
+
+      await onUpdate();
+      onClose();
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const dayNames = {
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday'
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Manage Line</h3>
+              <p className="text-sm text-gray-600">Code: {line.lineCode}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
+            {[
+              { id: 'details', name: 'Line Details', icon: '📝' },
+              { id: 'schedule', name: 'Schedule', icon: '🕒' },
+              { id: 'queue', name: 'Current Queue', icon: '👥' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                {tab.name}
+              </button>
+            ))}
+          </div>
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+
+          {/* Tab Content */}
+          {activeTab === 'details' && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Line Title
+                </label>
+                <input
+                  type="text"
+                  value={editData.title}
+                  onChange={(e) => setEditData({...editData, title: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={editData.description}
+                  onChange={(e) => setEditData({...editData, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Max Capacity
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="200"
+                    value={editData.maxCapacity}
+                    onChange={(e) => setEditData({...editData, maxCapacity: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Service Time (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="240"
+                    value={editData.estimatedServiceTime}
+                    onChange={(e) => setEditData({...editData, estimatedServiceTime: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'schedule' && (
+            <div>
+              <h4 className="font-medium text-gray-900 mb-4">Operating Hours</h4>
+              <div className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50">
+                {editData.schedule.map((day, index) => (
+                  <div key={day.day} className="flex items-center gap-3">
+                    <div className="w-24 flex-shrink-0">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={day.isAvailable}
+                          onChange={(e) => updateSchedule(index, 'isAvailable', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium">{dayNames[day.day]}</span>
+                      </label>
+                    </div>
+                    
+                    {day.isAvailable ? (
+                      <>
+                        <input
+                          type="time"
+                          value={day.startTime}
+                          onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                        <span className="text-gray-500 text-sm">to</span>
+                        <input
+                          type="time"
+                          value={day.endTime}
+                          onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </>
+                    ) : (
+                      <div className="flex-1 text-center text-sm text-gray-500">Closed</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'queue' && (
+            <div>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{line.queueCount || 0}</div>
+                  <div className="text-sm text-gray-600">In Queue</div>
+                </div>
+                <div className="text-center p-4 bg-orange-50 rounded-lg">
+                  <div className="text-2xl font-bold text-orange-600">{line.estimatedWaitTime || 0}m</div>
+                  <div className="text-sm text-gray-600">Est. Wait</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{line.settings?.maxCapacity || 0}</div>
+                  <div className="text-sm text-gray-600">Capacity</div>
+                </div>
+              </div>
+
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>Queue management coming soon</p>
+                <p className="text-sm">Real-time queue monitoring and management tools</p>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-6 border-t">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
