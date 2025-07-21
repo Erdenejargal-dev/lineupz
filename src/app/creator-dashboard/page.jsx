@@ -1311,9 +1311,8 @@ const LineManagement = ({ line, queueData, queueLoading, onMarkVisited, onRemove
   );
 };
 
-// NEW: Create Line Modal with Tabs
+// NEW: Create Line Modal with Dropdown
 const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
-  const [activeTab, setActiveTab] = useState('queue');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -1347,13 +1346,9 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
     setFormData({ ...formData, schedule: newSchedule });
   };
 
-  const handleSubmit = async (e) => {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
-    const submitData = { ...formData, serviceType: activeTab };
-    await onSubmit(submitData);
-    onClose();
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
   };
 
   const dayNames = {
@@ -1373,6 +1368,7 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900">Create New Line</h3>
             <button
+              type="button"
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 text-2xl"
             >
@@ -1380,30 +1376,45 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
             </button>
           </div>
 
-          {/* Service Type Tabs */}
-          <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
-            {[
-              { id: 'queue', name: 'Queue Only', icon: '🏃', desc: 'Traditional line system' },
-              { id: 'appointments', name: 'Appointments', icon: '📅', desc: 'Time slot booking' },
-              { id: 'hybrid', name: 'Hybrid', icon: '🔄', desc: 'Both options' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex flex-col items-center py-3 px-4 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <span className="text-lg mb-1">{tab.icon}</span>
-                <span className="font-medium">{tab.name}</span>
-                <span className="text-xs text-gray-500">{tab.desc}</span>
-              </button>
-            ))}
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Service Type Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Service Type *
+              </label>
+              <select
+                value={formData.serviceType}
+                onChange={(e) => setFormData({...formData, serviceType: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="queue">🏃 Queue Only - Traditional first-come-first-served line</option>
+                <option value="appointments">📅 Appointments Only - Customers book specific time slots</option>
+                <option value="hybrid">🔄 Hybrid - Both queue and appointment options available</option>
+              </select>
+              <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  {formData.serviceType === 'queue' && (
+                    <>
+                      <strong>Queue Only:</strong> Perfect for coffee shops, retail stores, banks. 
+                      Customers join a line and wait their turn. Simple and fast.
+                    </>
+                  )}
+                  {formData.serviceType === 'appointments' && (
+                    <>
+                      <strong>Appointments Only:</strong> Ideal for hairstylists, doctors, consultants. 
+                      Customers book specific time slots in advance. Professional and organized.
+                    </>
+                  )}
+                  {formData.serviceType === 'hybrid' && (
+                    <>
+                      <strong>Hybrid:</strong> Best for restaurants, salons, medical clinics. 
+                      Customers can either join the queue for immediate service or book an appointment for later.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
@@ -1417,8 +1428,8 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder={
-                    activeTab === 'queue' ? 'Coffee Shop Queue' :
-                    activeTab === 'appointments' ? 'Hair Salon Appointments' :
+                    formData.serviceType === 'queue' ? 'Coffee Shop Queue' :
+                    formData.serviceType === 'appointments' ? 'Hair Salon Appointments' :
                     'Restaurant Service'
                   }
                 />
@@ -1434,15 +1445,15 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows="3"
                   placeholder={
-                    activeTab === 'queue' ? 'Queue for coffee orders and pickup' :
-                    activeTab === 'appointments' ? 'Professional hair styling and cuts' :
+                    formData.serviceType === 'queue' ? 'Queue for coffee orders and pickup' :
+                    formData.serviceType === 'appointments' ? 'Professional hair styling and cuts' :
                     'Dine-in and takeout orders'
                   }
                 />
               </div>
 
               {/* Only show capacity and service time for queue and hybrid */}
-              {(activeTab === 'queue' || activeTab === 'hybrid') && (
+              {(formData.serviceType === 'queue' || formData.serviceType === 'hybrid') && (
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1456,6 +1467,7 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                       onChange={(e) => setFormData({...formData, maxCapacity: parseInt(e.target.value)})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Maximum people allowed in queue at once</p>
                   </div>
 
                   <div>
@@ -1470,12 +1482,13 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                       onChange={(e) => setFormData({...formData, estimatedServiceTime: parseInt(e.target.value)})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Average time to serve each customer</p>
                   </div>
                 </>
               )}
 
               {/* For appointments only, show a note */}
-              {activeTab === 'appointments' && (
+              {formData.serviceType === 'appointments' && (
                 <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-sm text-blue-800">
                     📅 <strong>Appointment Mode:</strong> Capacity and service time are managed through appointment duration and scheduling below.
@@ -1485,9 +1498,10 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
             </div>
 
             {/* Appointment Settings - Only show for appointments/hybrid */}
-            {(activeTab === 'appointments' || activeTab === 'hybrid') && (
+            {(formData.serviceType === 'appointments' || formData.serviceType === 'hybrid') && (
               <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
                 <h4 className="font-medium text-blue-900 mb-4">Appointment Settings</h4>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1511,6 +1525,9 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                       <option value={90}>1.5 hours</option>
                       <option value={120}>2 hours</option>
                     </select>
+                    <p className="text-xs text-gray-600 mt-1">
+                      <strong>How long each appointment lasts.</strong> For example: haircut = 45 minutes, doctor visit = 30 minutes.
+                    </p>
                   </div>
 
                   <div>
@@ -1532,6 +1549,9 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                       <option value={30}>Every 30 minutes</option>
                       <option value={60}>Every hour</option>
                     </select>
+                    <p className="text-xs text-gray-600 mt-1">
+                      <strong>How often new appointments can start.</strong> If duration is 45min but interval is 30min, appointments can overlap (multiple chairs/rooms).
+                    </p>
                   </div>
 
                   <div>
@@ -1555,6 +1575,7 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                       <option value={14}>2 weeks ahead</option>
                       <option value={30}>1 month ahead</option>
                     </select>
+                    <p className="text-xs text-gray-600 mt-1">How far in advance customers can book</p>
                   </div>
 
                   <div>
@@ -1577,6 +1598,7 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                       <option value={4}>4 hours before</option>
                       <option value={24}>24 hours before</option>
                     </select>
+                    <p className="text-xs text-gray-600 mt-1">Latest time customers can cancel without penalty</p>
                   </div>
                 </div>
 
@@ -1594,7 +1616,7 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                       })}
                       className="mr-2"
                     />
-                    <span className="text-sm text-gray-700">Auto-confirm appointments</span>
+                    <span className="text-sm text-gray-700">Auto-confirm appointments (customers don't need to wait for approval)</span>
                   </label>
                 </div>
               </div>
@@ -1656,7 +1678,7 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                 disabled={refreshing}
                 className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
               >
-                {refreshing ? 'Creating...' : `Create ${activeTab === 'queue' ? 'Queue' : activeTab === 'appointments' ? 'Appointment Line' : 'Hybrid Line'}`}
+                {refreshing ? 'Creating...' : `Create ${formData.serviceType === 'queue' ? 'Queue' : formData.serviceType === 'appointments' ? 'Appointment Line' : 'Hybrid Line'}`}
               </button>
             </div>
           </form>
