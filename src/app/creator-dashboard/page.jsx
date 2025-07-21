@@ -223,6 +223,7 @@ const CreatorDashboard = () => {
             onCreateLine={createLine}
             onToggleAvailability={toggleLineAvailability}
             refreshing={refreshing}
+            loadDashboardData={loadDashboardData}
           />
         )}
 
@@ -310,7 +311,7 @@ const OverviewTab = ({ dashboardData }) => {
 };
 
 // Lines Tab Component
-const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) => {
+const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing, loadDashboardData }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [managingLine, setManagingLine] = useState(null);
   const [queueData, setQueueData] = useState(null);
