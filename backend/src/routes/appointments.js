@@ -4,7 +4,7 @@ const { authenticateToken } = require('../middleware/auth');
 const appointmentController = require('../controllers/appointmentController');
 
 // Public routes
-router.get('/available-slots/:lineId', appointmentController.getAvailableSlots);
+router.get('/available-slots/:lineCode', appointmentController.getAvailableSlots);
 
 // Protected routes (require authentication)
 router.post('/book', authenticateToken, appointmentController.bookAppointment);

@@ -420,7 +420,7 @@ const AppointmentBookingInterface = ({ lineInfo, onSuccess }) => {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/appointments/available-slots/${lineInfo._id}?date=${selectedDate}`
+        `${API_BASE_URL}/appointments/available-slots/${lineInfo.lineCode}?date=${selectedDate}`
       );
       const data = await response.json();
 

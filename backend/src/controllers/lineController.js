@@ -72,15 +72,17 @@ const createLine = async (req, res) => {
       codeType: codeType || 'stable'
     };
 
-    // NEW: Only add appointmentSettings for appointment/hybrid lines
+    // NEW: Add appointmentSettings for appointment/hybrid lines
     if (serviceType === 'appointments' || serviceType === 'hybrid') {
-      if (!appointmentSettings) {
-        return res.status(400).json({
-          success: false,
-          message: 'Appointment settings are required for appointment-based lines'
-        });
-      }
-      lineData.appointmentSettings = appointmentSettings;
+      lineData.appointmentSettings = appointmentSettings || {
+        duration: 30,
+        slotInterval: 30,
+        advanceBookingDays: 7,
+        bufferTime: 5,
+        cancellationHours: 2,
+        autoConfirm: true,
+        maxConcurrentAppointments: 1
+      };
     }
 
     const line = new Line(lineData);

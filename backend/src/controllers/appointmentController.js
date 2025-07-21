@@ -7,7 +7,7 @@ const Line = require('../models/Line');
 // Get available slots for a line on a specific date
 const getAvailableSlots = async (req, res) => {
   try {
-    const { lineId } = req.params;
+    const { lineCode } = req.params;
     const { date } = req.query; // YYYY-MM-DD format
     
     if (!date) {
@@ -17,7 +17,7 @@ const getAvailableSlots = async (req, res) => {
       });
     }
     
-    const line = await Line.findById(lineId);
+    const line = await Line.findOne({ lineCode, isActive: true });
     if (!line) {
       return res.status(404).json({
         success: false,
@@ -86,7 +86,7 @@ const getAvailableSlots = async (req, res) => {
     const endOfDay = new Date(`${date}T23:59:59.999Z`);
     
     const existingAppointments = await Appointment.find({
-      line: lineId,
+      line: line._id,
       appointmentTime: {
         $gte: startOfDay,
         $lte: endOfDay
