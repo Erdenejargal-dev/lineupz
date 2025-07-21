@@ -1348,7 +1348,9 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
     const submitData = { ...formData, serviceType: activeTab };
     await onSubmit(submitData);
     onClose();
