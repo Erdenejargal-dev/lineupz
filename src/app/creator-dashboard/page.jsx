@@ -20,14 +20,16 @@ const CreatorDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    setToken(savedToken);
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error('Error parsing user:', e);
+    if (typeof window !== 'undefined') {
+      const savedToken = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      setToken(savedToken);
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch (e) {
+          console.error('Error parsing user:', e);
+        }
       }
     }
   }, []);
@@ -680,7 +682,7 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
     ]
   });
 
-  const [showSchedule, setShowSchedule] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(true);
 
   const updateSchedule = (dayIndex, field, value) => {
     const newSchedule = [...formData.schedule];
@@ -780,20 +782,6 @@ const CreateLineForm = ({ onSubmit, onCancel, loading }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Code Type
-        </label>
-        <select
-          value={formData.codeType}
-          onChange={(e) => setFormData({...formData, codeType: e.target.value})}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="stable">Stable (permanent code)</option>
-          <option value="temporary">Temporary (expires in 24h)</option>
-        </select>
       </div>
 
       <div>

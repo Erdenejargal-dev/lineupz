@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Users, Clock, QrCode, LogOut, Plus, Calendar, X } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
 // Add this new component to your DashboardRouter
 const MyAppointments = ({ token }) => {
@@ -178,12 +178,16 @@ const CustomerDashboardViewEnhanced = ({ showCreatorOption = false }) => {
   const [myQueue, setMyQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
+    setToken(savedToken);
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
