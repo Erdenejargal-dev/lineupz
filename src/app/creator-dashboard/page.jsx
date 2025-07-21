@@ -311,6 +311,9 @@ const OverviewTab = ({ dashboardData }) => {
 // Lines Tab Component
 const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [managingLine, setManagingLine] = useState(null);
+  const [queueData, setQueueData] = useState(null);
+  const [queueLoading, setQueueLoading] = useState(false);
   const [createFormData, setCreateFormData] = useState({
     title: '',
     description: '',
@@ -354,6 +357,11 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
         { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false },
       ]
     });
+  };
+
+  const handleManageLine = (line) => {
+    // For now, show a simple alert with line details
+    alert(`Managing line: ${line.title} (${line.lineCode})\n\nQueue Management:\n- Current queue: ${line.queueCount || 0} people\n- Status: ${line.isAvailable ? 'Active' : 'Paused'}\n\nThis will be expanded to show full queue management interface.`);
   };
 
   const dayNames = {
@@ -539,6 +547,7 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
               key={line._id}
               line={line}
               onToggleAvailability={() => onToggleAvailability(line._id)}
+              onManageLine={handleManageLine}
               refreshing={refreshing}
             />
           ))}
@@ -561,13 +570,25 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
 };
 
 // Line Card Component
-const LineCard = ({ line, onToggleAvailability, refreshing }) => {
+const LineCard = ({ line, onToggleAvailability, refreshing, onManageLine }) => {
   const [copied, setCopied] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
 
   const copyCode = () => {
     navigator.clipboard.writeText(line.lineCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleToggleAvailability = async () => {
+    setIsToggling(true);
+    try {
+      await onToggleAvailability();
+    } catch (error) {
+      console.error('Toggle failed:', error);
+    } finally {
+      setIsToggling(false);
+    }
   };
 
   return (
@@ -617,18 +638,18 @@ const LineCard = ({ line, onToggleAvailability, refreshing }) => {
 
       <div className="flex gap-2">
         <button
-          onClick={onToggleAvailability}
-          disabled={refreshing}
+          onClick={handleToggleAvailability}
+          disabled={refreshing || isToggling}
           className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
             line.isAvailable
               ? 'bg-red-50 text-red-600 hover:bg-red-100'
               : 'bg-green-50 text-green-600 hover:bg-green-100'
           }`}
         >
-          {line.isAvailable ? 'Pause' : 'Activate'}
+          {isToggling ? 'Updating...' : (line.isAvailable ? 'Pause' : 'Activate')}
         </button>
         <button
-          onClick={() => window.location.href = `/line/${line._id}`}
+          onClick={() => onManageLine(line)}
           className="flex-1 px-3 py-2 text-sm font-medium rounded-lg bg-gray-900 text-white hover:bg-gray-800"
         >
           Manage
