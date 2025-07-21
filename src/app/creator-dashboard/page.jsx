@@ -133,7 +133,7 @@ const CreatorDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pt-16">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -315,8 +315,24 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
     title: '',
     description: '',
     maxCapacity: 50,
-    estimatedServiceTime: 5
+    estimatedServiceTime: 5,
+    codeType: 'stable',
+    schedule: [
+      { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'tuesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'wednesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'thursday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+      { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+    ]
   });
+
+  const updateSchedule = (dayIndex, field, value) => {
+    const newSchedule = [...createFormData.schedule];
+    newSchedule[dayIndex] = { ...newSchedule[dayIndex], [field]: value };
+    setCreateFormData({ ...createFormData, schedule: newSchedule });
+  };
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
@@ -326,8 +342,28 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
       title: '',
       description: '',
       maxCapacity: 50,
-      estimatedServiceTime: 5
+      estimatedServiceTime: 5,
+      codeType: 'stable',
+      schedule: [
+        { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+        { day: 'tuesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+        { day: 'wednesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+        { day: 'thursday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+        { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+        { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+        { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+      ]
     });
+  };
+
+  const dayNames = {
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday'
   };
 
   return (
@@ -400,6 +436,79 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
                   onChange={(e) => setCreateFormData({...createFormData, estimatedServiceTime: parseInt(e.target.value)})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Code Type
+              </label>
+              <select
+                value={createFormData.codeType}
+                onChange={(e) => setCreateFormData({...createFormData, codeType: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="stable">Stable (permanent code)</option>
+                <option value="temporary">Temporary (expires in 24h)</option>
+              </select>
+            </div>
+
+            {/* Schedule Section */}
+            <div className="border-t pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Operating Hours
+              </label>
+              <div className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50">
+                <div className="text-sm text-gray-600 mb-3">
+                  Set your line's operating hours for each day of the week:
+                </div>
+                {createFormData.schedule.map((day, index) => (
+                  <div key={day.day} className="flex items-center gap-3">
+                    <div className="w-24 flex-shrink-0">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={day.isAvailable}
+                          onChange={(e) => updateSchedule(index, 'isAvailable', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-medium capitalize">{dayNames[day.day]}</span>
+                      </label>
+                    </div>
+                    
+                    {day.isAvailable && (
+                      <>
+                        <div className="flex-1">
+                          <input
+                            type="time"
+                            value={day.startTime}
+                            onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                        <span className="text-gray-500 text-sm">to</span>
+                        <div className="flex-1">
+                          <input
+                            type="time"
+                            value={day.endTime}
+                            onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                        </div>
+                      </>
+                    )}
+                    
+                    {!day.isAvailable && (
+                      <div className="flex-1 text-center text-sm text-gray-500">
+                        Closed
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                <div className="text-xs text-gray-500 mt-2">
+                  💡 Tip: Your line will only be available during these hours. People can't join outside these times.
+                </div>
               </div>
             </div>
             <div className="flex gap-3">
