@@ -414,7 +414,10 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
         <LineManagementModal 
           line={managingLine} 
           onClose={() => setManagingLine(null)}
-          onUpdate={loadDashboardData}
+          onUpdate={() => {
+            loadDashboardData();
+            setManagingLine(null);
+          }}
         />
       )}
 
