@@ -151,13 +151,28 @@ lineSchema.methods.isCurrentlyAvailable = function() {
   if (!this.isActive || !this.availability.isActive) return false;
   
   const now = new Date();
-  const currentDay = now.toLocaleLowerCase().slice(0, 3) + now.toLocaleLowerCase().slice(3);
+  const currentDay = now.toLocaleDateString('en-US', { weekday: 'lowercase' });
   const currentTime = now.toTimeString().slice(0, 5);
   
   const todaySchedule = this.availability.schedule.find(s => s.day === currentDay);
   if (!todaySchedule || !todaySchedule.isAvailable) return false;
   
   return currentTime >= todaySchedule.startTime && currentTime <= todaySchedule.endTime;
+};
+
+// Method to get current queue count
+lineSchema.methods.getCurrentQueueCount = async function() {
+  const LineJoiner = require('./LineJoiner');
+  return await LineJoiner.countDocuments({
+    line: this._id,
+    status: 'waiting'
+  });
+};
+
+// Method to get estimated wait time
+lineSchema.methods.getEstimatedWaitTime = async function() {
+  const queueCount = await this.getCurrentQueueCount();
+  return queueCount * this.settings.estimatedServiceTime;
 };
 
 // Method to get available appointment slots

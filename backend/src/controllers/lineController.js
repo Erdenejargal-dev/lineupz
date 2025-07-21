@@ -21,15 +21,16 @@ const createLine = async (req, res) => {
     const { 
       title, 
       description, 
+      maxCapacity,
+      estimatedServiceTime,
       serviceType,           // NEW FIELD
       appointmentSettings,   // NEW FIELD
-      settings, 
-      availability, 
+      schedule,              // NEW FIELD - from frontend
       codeType 
     } = req.body;
 
     // Validation
-    if (!title || !settings?.maxCapacity || !settings?.estimatedServiceTime) {
+    if (!title || !maxCapacity || !estimatedServiceTime) {
       return res.status(400).json({
         success: false,
         message: 'Required fields: title, maxCapacity, estimatedServiceTime'
@@ -52,8 +53,22 @@ const createLine = async (req, res) => {
       description,
       lineCode,
       serviceType: serviceType || 'queue',    // NEW: Default to queue
-      settings,
-      availability,
+      settings: {
+        maxCapacity,
+        estimatedServiceTime
+      },
+      availability: {
+        isActive: true,
+        schedule: schedule || [
+          { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'tuesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'wednesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'thursday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+          { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+          { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false }
+        ]
+      },
       codeType: codeType || 'stable'
     };
 
