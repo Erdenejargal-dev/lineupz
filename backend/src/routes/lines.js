@@ -21,7 +21,7 @@ router.get('/my-lines', authenticateToken, getMyLines); // Get creator's lines
 
 // Line management routes (creator only)
 router.get('/:lineId', authenticateToken, getLineDetails); // Get specific line details
-router.put('/:lineId', authenticateToken, updateLine); // Update line settings
+router.patch('/:lineId', authenticateToken, updateLine); // Update line settings
 router.post('/:lineId/regenerate-code', authenticateToken, regenerateCode); // Regenerate line code
 router.patch('/:lineId/toggle-availability', authenticateToken, toggleAvailability); // Toggle availability
 router.delete('/:lineId', authenticateToken, deleteLine); // Delete line

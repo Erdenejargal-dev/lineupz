@@ -1438,33 +1438,47 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Max Capacity
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="200"
-                  value={formData.maxCapacity}
-                  onChange={(e) => setFormData({...formData, maxCapacity: parseInt(e.target.value)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              {/* Only show capacity and service time for queue and hybrid */}
+              {(activeTab === 'queue' || activeTab === 'hybrid') && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Max Capacity
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="200"
+                      value={formData.maxCapacity}
+                      onChange={(e) => setFormData({...formData, maxCapacity: parseInt(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Service Time (minutes)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="240"
-                  value={formData.estimatedServiceTime}
-                  onChange={(e) => setFormData({...formData, estimatedServiceTime: parseInt(e.target.value)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Service Time (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="240"
+                      value={formData.estimatedServiceTime}
+                      onChange={(e) => setFormData({...formData, estimatedServiceTime: parseInt(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* For appointments only, show a note */}
+              {activeTab === 'appointments' && (
+                <div className="md:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    📅 <strong>Appointment Mode:</strong> Capacity and service time are managed through appointment duration and scheduling below.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Appointment Settings - Only show for appointments/hybrid */}

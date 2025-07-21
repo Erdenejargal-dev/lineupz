@@ -331,7 +331,7 @@ const getLineDetails = async (req, res) => {
 const updateLine = async (req, res) => {
   try {
     const { lineId } = req.params;
-    const { title, description, maxCapacity, estimatedServiceTime, allowJoining, schedule } = req.body;
+    const { title, description, maxCapacity, estimatedServiceTime, schedule } = req.body;
 
     const line = await Line.findOne({
       _id: lineId,
@@ -351,7 +351,6 @@ const updateLine = async (req, res) => {
     if (description !== undefined) line.description = description;
     if (maxCapacity) line.settings.maxCapacity = maxCapacity;
     if (estimatedServiceTime) line.settings.estimatedServiceTime = estimatedServiceTime;
-    if (allowJoining !== undefined) line.settings.allowJoining = allowJoining;
     if (schedule && Array.isArray(schedule)) line.availability.schedule = schedule;
 
     await line.save();
@@ -359,7 +358,7 @@ const updateLine = async (req, res) => {
     res.json({
       success: true,
       message: 'Line updated successfully',
-      line
+      line: line.toObject()
     });
 
   } catch (error) {
