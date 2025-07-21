@@ -40,26 +40,60 @@ const getDashboardOverview = async (req, res) => {
 
     const linesWithStats = await Promise.all(
       recentLines.map(async (line) => {
-        const [queueCount, servedToday] = await Promise.all([
-          LineJoiner.countDocuments({ line: line._id, status: 'waiting' }),
-          LineJoiner.countDocuments({ 
-            line: line._id, 
-            status: 'visited',
-            visitedAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
-          })
-        ]);
+        try {
+          const [queueCount, servedToday] = await Promise.all([
+            LineJoiner.countDocuments({ line: line._id, status: 'waiting' }),
+            LineJoiner.countDocuments({ 
+              line: line._id, 
+              status: 'visited',
+              visitedAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) }
+            })
+          ]);
 
-        return {
-          _id: line._id,
-          title: line.title,
-          lineCode: line.lineCode,
-          isActive: line.availability.isActive,
-          currentQueue: queueCount,
-          servedToday,
-          estimatedWaitTime: await line.getEstimatedWaitTime(),
-          isCurrentlyAvailable: line.isCurrentlyAvailable(),
-          createdAt: line.createdAt
-        };
+          // Safely get estimated wait time
+          let estimatedWaitTime = 0;
+          try {
+            estimatedWaitTime = await line.getEstimatedWaitTime();
+          } catch (err) {
+            // Fallback calculation
+            estimatedWaitTime = queueCount * (line.settings?.estimatedServiceTime || 5);
+          }
+
+          // Safely check if currently available
+          let isCurrentlyAvailable = false;
+          try {
+            isCurrentlyAvailable = line.isCurrentlyAvailable();
+          } catch (err) {
+            // Fallback - just check if active
+            isCurrentlyAvailable = line.availability?.isActive || false;
+          }
+
+          return {
+            _id: line._id,
+            title: line.title,
+            lineCode: line.lineCode,
+            isActive: line.availability?.isActive || false,
+            currentQueue: queueCount,
+            servedToday,
+            estimatedWaitTime,
+            isCurrentlyAvailable,
+            createdAt: line.createdAt
+          };
+        } catch (lineError) {
+          console.error('Error processing line in dashboard:', line._id, lineError);
+          // Return basic line info if there's an error
+          return {
+            _id: line._id,
+            title: line.title,
+            lineCode: line.lineCode,
+            isActive: false,
+            currentQueue: 0,
+            servedToday: 0,
+            estimatedWaitTime: 0,
+            isCurrentlyAvailable: false,
+            createdAt: line.createdAt
+          };
+        }
       })
     );
 

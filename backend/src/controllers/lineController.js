@@ -219,15 +219,35 @@ const getMyLines = async (req, res) => {
     // Add queue info for each line
     const linesWithQueue = await Promise.all(
       lines.map(async (line) => {
-        const queueCount = await line.getCurrentQueueCount();
-        const estimatedWaitTime = await line.getEstimatedWaitTime();
-        
-        return {
-          ...line.toObject(),
-          queueCount,
-          estimatedWaitTime,
-          isAvailable: line.isCurrentlyAvailable()
-        };
+        try {
+          const queueCount = await line.getCurrentQueueCount();
+          const estimatedWaitTime = await line.getEstimatedWaitTime();
+          
+          const lineObj = line.toObject();
+          
+          // Ensure serviceType exists (for backward compatibility)
+          if (!lineObj.serviceType) {
+            lineObj.serviceType = 'queue';
+          }
+          
+          return {
+            ...lineObj,
+            queueCount,
+            estimatedWaitTime,
+            isAvailable: line.isCurrentlyAvailable()
+          };
+        } catch (lineError) {
+          console.error('Error processing line:', line._id, lineError);
+          // Return basic line info if there's an error
+          const lineObj = line.toObject();
+          return {
+            ...lineObj,
+            serviceType: lineObj.serviceType || 'queue',
+            queueCount: 0,
+            estimatedWaitTime: 0,
+            isAvailable: false
+          };
+        }
       })
     );
 
