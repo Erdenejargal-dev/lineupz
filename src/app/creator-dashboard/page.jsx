@@ -319,6 +319,7 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
     description: '',
     maxCapacity: 50,
     estimatedServiceTime: 5,
+    serviceType: 'queue', // NEW: queue, appointments, hybrid
     codeType: 'stable',
     schedule: [
       { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
@@ -328,7 +329,17 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
       { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
       { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
       { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false },
-    ]
+    ],
+    // NEW: Appointment settings for appointment/hybrid lines
+    appointmentSettings: {
+      duration: 30,
+      slotInterval: 30,
+      advanceBookingDays: 7,
+      bufferTime: 5,
+      cancellationHours: 2,
+      autoConfirm: true,
+      maxConcurrentAppointments: 1
+    }
   });
 
   const updateSchedule = (dayIndex, field, value) => {
@@ -346,6 +357,7 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
       description: '',
       maxCapacity: 50,
       estimatedServiceTime: 5,
+      serviceType: 'queue',
       codeType: 'stable',
       schedule: [
         { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
@@ -355,7 +367,16 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
         { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
         { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
         { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false },
-      ]
+      ],
+      appointmentSettings: {
+        duration: 30,
+        slotInterval: 30,
+        advanceBookingDays: 7,
+        bufferTime: 5,
+        cancellationHours: 2,
+        autoConfirm: true,
+        maxConcurrentAppointments: 1
+      }
     });
   };
 
@@ -449,6 +470,26 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Service Type *
+              </label>
+              <select
+                value={createFormData.serviceType}
+                onChange={(e) => setCreateFormData({...createFormData, serviceType: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="queue">Queue Only - People join and wait in line</option>
+                <option value="appointments">Appointments Only - People book specific time slots</option>
+                <option value="hybrid">Hybrid - Both queue and appointment booking</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {createFormData.serviceType === 'queue' && '🏃 Traditional queue system - first come, first served'}
+                {createFormData.serviceType === 'appointments' && '📅 Appointment booking - customers schedule specific times'}
+                {createFormData.serviceType === 'hybrid' && '🔄 Flexible - customers can either join queue or book appointments'}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Code Type
               </label>
               <select
@@ -460,6 +501,130 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing }) =
                 <option value="temporary">Temporary (expires in 24h)</option>
               </select>
             </div>
+
+            {/* Appointment Settings - Only show for appointments/hybrid */}
+            {(createFormData.serviceType === 'appointments' || createFormData.serviceType === 'hybrid') && (
+              <div className="border-t pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Appointment Settings
+                </label>
+                <div className="border border-gray-200 rounded-lg p-4 space-y-4 bg-blue-50">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Appointment Duration (minutes)
+                      </label>
+                      <select
+                        value={createFormData.appointmentSettings.duration}
+                        onChange={(e) => setCreateFormData({
+                          ...createFormData, 
+                          appointmentSettings: {
+                            ...createFormData.appointmentSettings,
+                            duration: parseInt(e.target.value)
+                          }
+                        })}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value={15}>15 minutes</option>
+                        <option value={30}>30 minutes</option>
+                        <option value={45}>45 minutes</option>
+                        <option value={60}>1 hour</option>
+                        <option value={90}>1.5 hours</option>
+                        <option value={120}>2 hours</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Time Slot Interval
+                      </label>
+                      <select
+                        value={createFormData.appointmentSettings.slotInterval}
+                        onChange={(e) => setCreateFormData({
+                          ...createFormData, 
+                          appointmentSettings: {
+                            ...createFormData.appointmentSettings,
+                            slotInterval: parseInt(e.target.value)
+                          }
+                        })}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value={15}>Every 15 minutes</option>
+                        <option value={30}>Every 30 minutes</option>
+                        <option value={60}>Every hour</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Advance Booking (days)
+                      </label>
+                      <select
+                        value={createFormData.appointmentSettings.advanceBookingDays}
+                        onChange={(e) => setCreateFormData({
+                          ...createFormData, 
+                          appointmentSettings: {
+                            ...createFormData.appointmentSettings,
+                            advanceBookingDays: parseInt(e.target.value)
+                          }
+                        })}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value={1}>1 day ahead</option>
+                        <option value={3}>3 days ahead</option>
+                        <option value={7}>1 week ahead</option>
+                        <option value={14}>2 weeks ahead</option>
+                        <option value={30}>1 month ahead</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Cancellation Policy (hours)
+                      </label>
+                      <select
+                        value={createFormData.appointmentSettings.cancellationHours}
+                        onChange={(e) => setCreateFormData({
+                          ...createFormData, 
+                          appointmentSettings: {
+                            ...createFormData.appointmentSettings,
+                            cancellationHours: parseInt(e.target.value)
+                          }
+                        })}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value={1}>1 hour before</option>
+                        <option value={2}>2 hours before</option>
+                        <option value={4}>4 hours before</option>
+                        <option value={24}>24 hours before</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={createFormData.appointmentSettings.autoConfirm}
+                        onChange={(e) => setCreateFormData({
+                          ...createFormData, 
+                          appointmentSettings: {
+                            ...createFormData.appointmentSettings,
+                            autoConfirm: e.target.checked
+                          }
+                        })}
+                        className="mr-2"
+                      />
+                      <span className="text-xs text-gray-700">Auto-confirm appointments</span>
+                    </label>
+                  </div>
+                  
+                  <div className="text-xs text-gray-600">
+                    💡 Perfect for hairstylists, doctors, consultants, and other appointment-based services
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Schedule Section */}
             <div className="border-t pt-4">
