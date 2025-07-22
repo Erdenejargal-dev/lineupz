@@ -350,10 +350,8 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing, loa
     setCreateFormData({ ...createFormData, schedule: newSchedule });
   };
 
-  const handleCreateSubmit = async (e) => {
-    e.preventDefault();
-    await onCreateLine(createFormData);
-    setShowCreateForm(false);
+  const handleCreateSubmit = async (formData) => {
+    await onCreateLine(formData);
     setCreateFormData({
       title: '',
       description: '',
@@ -426,7 +424,10 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing, loa
       {showCreateForm && (
         <CreateLineModal 
           onClose={() => setShowCreateForm(false)}
-          onSubmit={handleCreateSubmit}
+          onSubmit={(formData) => {
+            handleCreateSubmit(formData);
+            setShowCreateForm(false);
+          }}
           refreshing={refreshing}
         />
       )}
