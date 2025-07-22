@@ -97,7 +97,7 @@ const joinLine = async (req, res) => {
 
     // Populate line and user info for response
     await lineJoiner.populate([
-      { path: 'line', select: 'title description creator settings' },
+      { path: 'line', select: 'title description creator settings serviceType' },
       { path: 'user', select: 'userId name' }
     ]);
 
@@ -107,6 +107,20 @@ const joinLine = async (req, res) => {
       status: 'waiting',
       position: { $lt: nextPosition }
     }) + 1;
+
+    // Send SMS notification
+    try {
+      if (line.serviceType === 'hybrid') {
+        // Restaurant notification
+        await notifyRestaurantUpdate(lineJoiner._id, 'joined');
+      } else {
+        // Regular queue notification
+        await notifyQueueUpdate(lineJoiner._id, 'joined');
+      }
+    } catch (notificationError) {
+      console.error('Failed to send join notification:', notificationError);
+      // Don't fail the request if notification fails
+    }
 
     res.status(201).json({
       success: true,

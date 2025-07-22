@@ -2,6 +2,9 @@ const User = require('../models/User');
 const OTP = require('../models/OTP');
 const jwt = require('jsonwebtoken');
 
+// Import SMS functionality
+const { sendSMS } = require('./notificationController');
+
 // Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '30d' });
@@ -45,9 +48,16 @@ const sendOTP = async (req, res) => {
     // Generate and send OTP
     const otp = await OTP.createOTP(phone, purpose);
 
-    // TODO: Integrate with SMS service (Twilio, etc.)
-    // For now, we'll just log it (REMOVE IN PRODUCTION!)
-    console.log(`OTP for ${phone}: ${otp}`);
+    // Send OTP via Android SMS Gateway
+    const smsMessage = `Tabi: Your OTP code is ${otp}. Valid for 10 minutes. Do not share this code.`;
+    
+    try {
+      const smsResult = await sendSMS(phone, smsMessage);
+      console.log(`OTP SMS result for ${phone}:`, smsResult.success ? 'Success' : 'Failed');
+    } catch (smsError) {
+      console.error('Failed to send OTP SMS:', smsError);
+      // Don't fail the request if SMS fails - user can still see OTP in development
+    }
 
     res.json({
       success: true,

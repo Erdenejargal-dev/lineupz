@@ -3,6 +3,7 @@
 
 const Appointment = require('../models/Appointment');
 const Line = require('../models/Line');
+const { notifyAppointmentUpdate } = require('./notificationController');
 
 // Get available slots for a line on a specific date
 const getAvailableSlots = async (req, res) => {
@@ -212,6 +213,14 @@ const bookAppointment = async (req, res) => {
     
     await appointment.save();
     await appointment.populate(['line', 'user']);
+    
+    // Send SMS notification for appointment confirmation
+    try {
+      await notifyAppointmentUpdate(appointment._id, 'confirmed');
+    } catch (notificationError) {
+      console.error('Failed to send appointment confirmation SMS:', notificationError);
+      // Don't fail the request if notification fails
+    }
     
     res.status(201).json({
       success: true,

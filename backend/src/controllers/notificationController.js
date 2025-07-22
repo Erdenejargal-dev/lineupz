@@ -6,26 +6,70 @@ const Line = require('../models/Line');
 const LineJoiner = require('../models/LineJoiner');
 const Appointment = require('../models/Appointment');
 
-// Mock SMS service - Replace with actual SMS provider (Twilio, etc.)
+// Format phone number for Mongolia (+976)
+const formatMongolianPhone = (phoneNumber) => {
+  // Remove all non-digits
+  let cleaned = phoneNumber.replace(/\D/g, '');
+  
+  // If it starts with 976, add +
+  if (cleaned.startsWith('976')) {
+    return '+' + cleaned;
+  }
+  
+  // If it's 8 digits (local format), add +976
+  if (cleaned.length === 8) {
+    return '+976' + cleaned;
+  }
+  
+  // If it already has +976, return as is
+  if (phoneNumber.startsWith('+976')) {
+    return phoneNumber;
+  }
+  
+  // Default: assume it's a local number and add +976
+  return '+976' + cleaned;
+};
+
+// SMS service with Android SMS Gateway
 const sendSMS = async (phoneNumber, message) => {
   try {
-    // TODO: Integrate with actual SMS service
-    console.log(`📱 SMS to ${phoneNumber}: ${message}`);
+    // Format phone number for Mongolia
+    const formattedPhone = formatMongolianPhone(phoneNumber);
     
-    // For development, we'll just log the message
-    // In production, replace with actual SMS service:
-    /*
-    const twilio = require('twilio');
-    const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+    // Always log for debugging
+    console.log(`📱 SMS to ${formattedPhone}: ${message}`);
     
-    await client.messages.create({
-      body: message,
-      from: process.env.TWILIO_PHONE,
-      to: phoneNumber
-    });
-    */
+    // Check if Android SMS Gateway is configured
+    if (process.env.SMS_GATEWAY_URL) {
+      const response = await fetch(process.env.SMS_GATEWAY_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${Buffer.from(`${process.env.SMS_GATEWAY_LOGIN}:${process.env.SMS_GATEWAY_PASSWORD}`).toString('base64')}`
+        },
+        body: JSON.stringify({
+          textMessage: {
+            text: message
+          },
+          phoneNumbers: [formattedPhone]
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`✅ SMS sent successfully to ${formattedPhone}`);
+        return { success: true, message: 'SMS sent successfully via Android Gateway', messageId: result.id };
+      } else {
+        const error = await response.text();
+        console.error(`❌ SMS failed to ${formattedPhone}:`, error);
+        return { success: false, error: `Gateway error: ${error}` };
+      }
+    } else {
+      // Development mode - just log
+      console.log(`🔧 Development mode: SMS would be sent to ${formattedPhone}`);
+      return { success: true, message: 'SMS logged (development mode)' };
+    }
     
-    return { success: true, message: 'SMS sent successfully' };
   } catch (error) {
     console.error('SMS sending failed:', error);
     return { success: false, error: error.message };
@@ -324,5 +368,8 @@ module.exports = {
   notifyAllInLine,
   sendTestNotification,
   getNotificationSettings,
-  updateNotificationSettings
+  updateNotificationSettings,
+  // Export SMS functions for OTP
+  sendSMS,
+  formatMongolianPhone
 };
