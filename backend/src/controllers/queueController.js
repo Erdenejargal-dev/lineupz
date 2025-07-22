@@ -1,6 +1,7 @@
 const LineJoiner = require('../models/LineJoiner');
 const Line = require('../models/Line');
 const User = require('../models/User');
+const { notifyQueueUpdate, notifyRestaurantUpdate } = require('./notificationController');
 
 // Join a line using 6-digit code
 const joinLine = async (req, res) => {

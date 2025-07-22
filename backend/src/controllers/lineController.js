@@ -29,11 +29,18 @@ const createLine = async (req, res) => {
       codeType 
     } = req.body;
 
-    // Validation
-    if (!title || !maxCapacity || !estimatedServiceTime) {
+    // Validation - only require capacity and service time for queue/hybrid lines
+    if (!title) {
       return res.status(400).json({
         success: false,
-        message: 'Required fields: title, maxCapacity, estimatedServiceTime'
+        message: 'Line title is required'
+      });
+    }
+
+    if ((serviceType === 'queue' || serviceType === 'hybrid' || !serviceType) && (!maxCapacity || !estimatedServiceTime)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Max capacity and estimated service time are required for queue-based lines'
       });
     }
 
@@ -246,7 +253,7 @@ const getMyLines = async (req, res) => {
             ...lineObj,
             queueCount,
             estimatedWaitTime,
-            isAvailable: line.isCurrentlyAvailable()
+            isAvailable: line.availability?.isActive || false
           };
         } catch (lineError) {
           console.error('Error processing line:', line._id, lineError);

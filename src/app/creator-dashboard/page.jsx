@@ -1408,8 +1408,8 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
                   )}
                   {formData.serviceType === 'hybrid' && (
                     <>
-                      <strong>Hybrid:</strong> Best for restaurants, salons, medical clinics. 
-                      Customers can either join the queue for immediate service or book an appointment for later.
+                      <strong>Hybrid:</strong> Perfect for restaurants! Customers can join the waitlist for immediate seating or make reservations. 
+                      Capacity represents available tables/seats. Includes SMS notifications for queue updates.
                     </>
                   )}
                 </p>
@@ -1827,35 +1827,47 @@ const LineManagementModal = ({ line, onClose, onUpdate }) => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Max Capacity
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="200"
-                    value={editData.maxCapacity}
-                    onChange={(e) => setEditData({...editData, maxCapacity: parseInt(e.target.value)})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              {/* Only show capacity and service time for queue and hybrid lines */}
+              {(line.serviceType === 'queue' || line.serviceType === 'hybrid') && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Max Capacity
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="200"
+                      value={editData.maxCapacity}
+                      onChange={(e) => setEditData({...editData, maxCapacity: parseInt(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Time (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="240"
-                    value={editData.estimatedServiceTime}
-                    onChange={(e) => setEditData({...editData, estimatedServiceTime: parseInt(e.target.value)})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Service Time (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="240"
+                      value={editData.estimatedServiceTime}
+                      onChange={(e) => setEditData({...editData, estimatedServiceTime: parseInt(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* For appointments only, show a note */}
+              {line.serviceType === 'appointments' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    📅 <strong>Appointment Mode:</strong> Capacity and service time are managed through appointment duration and scheduling settings.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

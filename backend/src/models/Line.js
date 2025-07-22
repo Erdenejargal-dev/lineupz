@@ -83,13 +83,17 @@ const lineSchema = new mongoose.Schema({
   settings: {
     maxCapacity: {
       type: Number,
-      required: true,
+      required: function() {
+        return this.serviceType === 'queue' || this.serviceType === 'hybrid' || !this.serviceType;
+      },
       min: 1,
       max: 200
     },
     estimatedServiceTime: {
       type: Number,
-      required: true,
+      required: function() {
+        return this.serviceType === 'queue' || this.serviceType === 'hybrid' || !this.serviceType;
+      },
       min: 1,
       max: 240
     }

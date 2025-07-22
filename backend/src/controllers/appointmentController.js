@@ -31,6 +31,14 @@ const getAvailableSlots = async (req, res) => {
         message: 'This line does not support appointments'
       });
     }
+
+    // Ensure appointment settings exist
+    if (!line.appointmentSettings) {
+      return res.status(400).json({
+        success: false,
+        message: 'This line is not properly configured for appointments'
+      });
+    }
     
     // Check if the requested date is within allowed booking window
     const requestedDate = new Date(date);

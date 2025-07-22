@@ -34,6 +34,7 @@ app.use('/api/lines', require('./routes/lines'));
 app.use('/api/queue', require('./routes/queue'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/appointments', require('./routes/appointments'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
