@@ -30,7 +30,7 @@ const formatMongolianPhone = (phoneNumber) => {
   return '+976' + cleaned;
 };
 
-// SMS service with Android SMS Gateway
+// SMS service with Cloud SMS API
 const sendSMS = async (phoneNumber, message) => {
   try {
     // Format phone number for Mongolia
@@ -39,30 +39,28 @@ const sendSMS = async (phoneNumber, message) => {
     // Always log for debugging
     console.log(`📱 SMS to ${formattedPhone}: ${message}`);
     
-    // Check if Android SMS Gateway is configured
-    if (process.env.SMS_GATEWAY_URL) {
-      const response = await fetch(process.env.SMS_GATEWAY_URL, {
+    // Check if Cloud SMS API is configured
+    if (process.env.SMS_API_URL && process.env.SMS_API_KEY) {
+      const response = await fetch(process.env.SMS_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${Buffer.from(`${process.env.SMS_GATEWAY_LOGIN}:${process.env.SMS_GATEWAY_PASSWORD}`).toString('base64')}`
+          'Authorization': `Bearer ${process.env.SMS_API_KEY}`
         },
         body: JSON.stringify({
-          textMessage: {
-            text: message
-          },
-          phoneNumbers: [formattedPhone]
+          to: formattedPhone,
+          message: message
         })
       });
 
       if (response.ok) {
         const result = await response.json();
         console.log(`✅ SMS sent successfully to ${formattedPhone}`);
-        return { success: true, message: 'SMS sent successfully via Android Gateway', messageId: result.id };
+        return { success: true, message: 'SMS sent successfully via Cloud SMS', messageId: result.id };
       } else {
         const error = await response.text();
         console.error(`❌ SMS failed to ${formattedPhone}:`, error);
-        return { success: false, error: `Gateway error: ${error}` };
+        return { success: false, error: `Cloud SMS error: ${error}` };
       }
     } else {
       // Development mode - just log

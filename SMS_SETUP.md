@@ -1,14 +1,13 @@
-# 📱 Android SMS Gateway Setup Guide
+# 📱 Cloud SMS Service Setup Guide
 
-## 🚀 Quick Setup (2 minutes)
+## 🚀 Quick Setup (Already Complete!)
 
-Your system is already configured to use your Android SMS Gateway! Here's how it works:
+Your system has been migrated to use a reliable cloud SMS service! Here's how it works:
 
 ### **Current Configuration:**
 ```env
-SMS_GATEWAY_URL=http://192.168.185.160:8080/message
-SMS_GATEWAY_LOGIN=your_gateway_login
-SMS_GATEWAY_PASSWORD=your_gateway_password
+SMS_API_URL=https://smstabi.tabisms.online
+SMS_API_KEY=512037a7-d978-4ac2-b083-94624981862d
 ```
 
 ### **How It Works:**
@@ -25,10 +24,8 @@ SMS_GATEWAY_PASSWORD=your_gateway_password
 **2. SMS Message Format:**
 ```json
 {
-  "textMessage": {
-    "text": "🎯 You've joined Coffee Shop! Your position: #3. Est. wait: 15min. Code: 123456"
-  },
-  "phoneNumbers": ["+97699591829"]
+  "to": "+97699591829",
+  "message": "🎯 You've joined Coffee Shop! Your position: #3. Est. wait: 15min. Code: 123456"
 }
 ```
 
@@ -72,26 +69,22 @@ console.log(`📱 SMS to +97699591829: Your table is ready!`);
 // Output: 🔧 Development mode: SMS would be sent to +97699591829
 ```
 
-### **Production Mode (With Gateway):**
+### **Production Mode (Cloud SMS - Active Now!):**
 ```javascript
-// With SMS_GATEWAY_URL configured - sends real SMS
-POST http://192.168.185.160:8080/message
+// With SMS_API_URL configured - sends real SMS via cloud service
+POST https://smstabi.tabisms.online
 {
-  "textMessage": { "text": "Your table is ready!" },
-  "phoneNumbers": ["+97699591829"]
+  "to": "+97699591829",
+  "message": "Your table is ready!"
 }
-// Output: ✅ SMS sent successfully to +97699591829
+// Output: ✅ SMS sent successfully via Cloud SMS
 ```
 
-## ⚙️ To Enable Real SMS:
+## ⚙️ SMS is Already Enabled!
 
-1. **Update `backend/.env`** with your actual gateway credentials:
-   ```env
-   SMS_GATEWAY_LOGIN=your_actual_login
-   SMS_GATEWAY_PASSWORD=your_actual_password
-   ```
+✅ **Your system is ready to send SMS!** The cloud SMS service is already configured and active.
 
-2. **Restart your server** - SMS will work automatically!
+No additional setup required - all SMS notifications will work immediately.
 
 ## 🧪 Test SMS
 
