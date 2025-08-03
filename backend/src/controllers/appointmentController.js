@@ -63,19 +63,36 @@ const getAvailableSlots = async (req, res) => {
     
     console.log('Appointment settings:', line.appointmentSettings);
     
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      console.log('ERROR: Invalid date format:', date);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Use YYYY-MM-DD'
+      });
+    }
+
     // Check if the requested date is within allowed booking window
     const requestedDate = new Date(date + 'T00:00:00.000Z'); // Ensure UTC
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Start of today
     
+    console.log(`Requested date: ${requestedDate.toISOString()}`);
+    console.log(`Today: ${today.toISOString()}`);
+    
     const maxAdvanceDays = line.appointmentSettings?.advanceBookingDays || 7;
+    console.log(`Max advance days: ${maxAdvanceDays}`);
     
     // Handle fractional days (e.g., 0.04 for 1 hour)
     const maxAdvanceMilliseconds = maxAdvanceDays * 24 * 60 * 60 * 1000;
     const maxDate = new Date(today.getTime() + maxAdvanceMilliseconds);
     
+    console.log(`Max booking date: ${maxDate.toISOString()}`);
+    
     // Check if requested date is in the past
     if (requestedDate < today) {
+      console.log('ERROR: Requested date is in the past');
       return res.status(400).json({
         success: false,
         message: 'Cannot book appointments for past dates'
@@ -87,6 +104,7 @@ const getAvailableSlots = async (req, res) => {
         `${Math.round(maxAdvanceDays * 24)} hours` : 
         `${maxAdvanceDays} days`;
       
+      console.log('ERROR: Requested date is too far in advance');
       return res.status(400).json({
         success: false,
         message: `Appointments can only be booked up to ${advanceText} in advance`
@@ -95,9 +113,22 @@ const getAvailableSlots = async (req, res) => {
     
     // Get day of week
     const dayOfWeek = requestedDate.toLocaleDateString('en-US', { weekday: 'lowercase' });
+    console.log(`Day of week: ${dayOfWeek}`);
+    
+    // Check if line has availability schedule
+    if (!line.availability || !line.availability.schedule || !Array.isArray(line.availability.schedule)) {
+      console.log('ERROR: Line missing availability schedule');
+      return res.status(400).json({
+        success: false,
+        message: 'Line availability schedule not configured'
+      });
+    }
+    
+    console.log('Line schedule:', line.availability.schedule);
     
     // Find schedule for this day
     const daySchedule = line.availability.schedule.find(s => s.day === dayOfWeek);
+    console.log(`Schedule for ${dayOfWeek}:`, daySchedule);
     if (!daySchedule || !daySchedule.isAvailable) {
       return res.json({
         success: true,
