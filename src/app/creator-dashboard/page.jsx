@@ -1770,8 +1770,8 @@ const QueueManagementTab = ({ line }) => {
     );
   }
 
-  const queueCustomers = queueData?.queue || [];
-  const appointmentCustomers = queueData?.appointments || [];
+  const queueCustomers = queueData?.line?.queue || [];
+  const appointmentCustomers = queueData?.line?.appointments || [];
   const totalCustomers = queueCustomers.length + appointmentCustomers.length;
 
   return (
