@@ -363,11 +363,12 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
                       ...formData,
                       appointmentSettings: {
                         ...formData.appointmentSettings,
-                        advanceBookingDays: parseInt(e.target.value)
+                        advanceBookingDays: parseFloat(e.target.value)
                       }
                     })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
+                    <option value={0.04}>1 hour ahead</option>
                     <option value={1}>1 day ahead</option>
                     <option value={3}>3 days ahead</option>
                     <option value={7}>1 week ahead</option>

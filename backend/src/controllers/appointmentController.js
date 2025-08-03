@@ -45,12 +45,19 @@ const getAvailableSlots = async (req, res) => {
     const requestedDate = new Date(date);
     const today = new Date();
     const maxAdvanceDays = line.appointmentSettings?.advanceBookingDays || 7;
-    const maxDate = new Date(today.getTime() + maxAdvanceDays * 24 * 60 * 60 * 1000);
+    
+    // Handle fractional days (e.g., 0.04 for 1 hour)
+    const maxAdvanceMilliseconds = maxAdvanceDays * 24 * 60 * 60 * 1000;
+    const maxDate = new Date(today.getTime() + maxAdvanceMilliseconds);
     
     if (requestedDate > maxDate) {
+      const advanceText = maxAdvanceDays < 1 ? 
+        `${Math.round(maxAdvanceDays * 24)} hours` : 
+        `${maxAdvanceDays} days`;
+      
       return res.status(400).json({
         success: false,
-        message: `Appointments can only be booked ${maxAdvanceDays} days in advance`
+        message: `Appointments can only be booked ${advanceText} in advance`
       });
     }
     
