@@ -99,4 +99,126 @@ router.get('/debug/:lineCode', async (req, res) => {
   }
 });
 
+// DIRECT TEST: Simulate exact creator dashboard API call
+router.get('/test-creator-dashboard/:lineCode', async (req, res) => {
+  try {
+    const { lineCode } = req.params;
+    const Line = require('../models/Line');
+    const LineJoiner = require('../models/LineJoiner');
+    const Appointment = require('../models/Appointment');
+    
+    console.log(`TEST: Simulating creator dashboard for line code ${lineCode}`);
+    
+    const line = await Line.findOne({ lineCode });
+    if (!line) {
+      return res.json({ success: false, message: 'Line not found', lineCode });
+    }
+    
+    console.log(`TEST: Found line ${line._id} with serviceType: ${line.serviceType}`);
+    
+    const serviceType = line.serviceType || 'queue';
+    let queue = [];
+    let appointments = [];
+    let queueCount = 0;
+    let appointmentCount = 0;
+
+    // Get current queue for queue-based or hybrid lines
+    if (serviceType === 'queue' || serviceType === 'hybrid') {
+      try {
+        queue = await LineJoiner.find({ line: line._id, status: 'waiting' })
+          .populate('user', 'userId name')
+          .sort({ position: 1 });
+        queueCount = queue.length;
+        console.log(`TEST: Found ${queueCount} queue customers`);
+      } catch (queueError) {
+        console.error('TEST: Error getting queue:', queueError);
+      }
+    }
+
+    // Get appointments for appointment-based or hybrid lines
+    if (serviceType === 'appointments' || serviceType === 'hybrid') {
+      try {
+        console.log(`TEST: Looking for appointments for line ${line._id}`);
+        
+        const allAppointments = await Appointment.find({
+          line: line._id,
+          status: { $in: ['confirmed', 'pending', 'in_progress'] }
+        })
+        .populate('user', 'name phone userId')
+        .sort({ appointmentTime: 1 });
+        
+        console.log(`TEST: Found ${allAppointments.length} total appointments`);
+        
+        // Show ALL appointments (no filtering)
+        appointments = allAppointments.map(appointment => ({
+          _id: appointment._id,
+          type: 'appointment',
+          userId: appointment.user?.userId || 'Unknown',
+          customerName: appointment.user?.name || 'Anonymous',
+          customerPhone: appointment.user?.phone,
+          appointmentTime: appointment.appointmentTime,
+          endTime: appointment.endTime,
+          duration: appointment.duration,
+          status: appointment.status,
+          customerMessage: appointment.notes || '',
+          joinedAt: appointment.createdAt
+        }));
+
+        appointmentCount = appointments.length;
+        console.log(`TEST: Returning ${appointmentCount} appointments`);
+      } catch (appointmentError) {
+        console.error('TEST: Error getting appointments:', appointmentError);
+      }
+    }
+    
+    const response = {
+      success: true,
+      lineCode,
+      lineId: line._id,
+      lineTitle: line.title,
+      serviceType,
+      queueCount,
+      appointmentCount,
+      totalCustomers: queueCount + appointmentCount,
+      queue: queue.map(joiner => ({
+        _id: joiner._id,
+        type: 'queue',
+        userId: joiner.user?.userId,
+        name: joiner.user?.name || 'Anonymous',
+        position: joiner.position,
+        joinedAt: joiner.joinedAt
+      })),
+      appointments: appointments,
+      // This is what the frontend should receive
+      exactApiResponse: {
+        success: true,
+        line: {
+          _id: line._id,
+          title: line.title,
+          serviceType: line.serviceType,
+          queueCount,
+          appointmentCount,
+          totalCustomers: queueCount + appointmentCount,
+          queue: queue.map(joiner => ({
+            _id: joiner._id,
+            type: 'queue',
+            userId: joiner.user?.userId,
+            name: joiner.user?.name || 'Anonymous',
+            position: joiner.position,
+            joinedAt: joiner.joinedAt
+          })),
+          appointments: appointments
+        }
+      }
+    };
+    
+    console.log(`TEST: Final response - appointments: ${appointments.length}, queue: ${queue.length}`);
+    res.json(response);
+    
+  } catch (error) {
+    console.error('TEST: Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;
