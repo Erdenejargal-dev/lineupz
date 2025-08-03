@@ -446,19 +446,28 @@ const getLineDetails = async (req, res) => {
       try {
         const Appointment = require('../models/Appointment');
         
+        console.log(`DEBUG: Looking for appointments for line ${lineId} (${line.lineCode})`);
+        
+        // Get ALL appointments for this line (not just today's) for debugging
+        const allAppointments = await Appointment.find({
+          line: lineId,
+          status: { $in: ['confirmed', 'pending', 'in_progress'] }
+        })
+        .populate('user', 'name phone userId')
+        .sort({ appointmentTime: 1 });
+        
+        console.log(`DEBUG: Found ${allAppointments.length} total appointments for line ${line.lineCode}`);
+        
         // Get today's and upcoming appointments
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        const upcomingAppointments = await Appointment.find({
-          line: lineId,
-          appointmentTime: { $gte: today },
-          status: { $in: ['confirmed', 'pending', 'in_progress'] }
-        })
-        .populate('user', 'name phone userId')
-        .sort({ appointmentTime: 1 })
-        .limit(20); // Limit to next 20 appointments
-
+        const upcomingAppointments = allAppointments.filter(appointment => 
+          new Date(appointment.appointmentTime) >= today
+        );
+        
+        console.log(`DEBUG: Found ${upcomingAppointments.length} upcoming appointments for line ${line.lineCode}`);
+        
         appointments = upcomingAppointments.map(appointment => ({
           _id: appointment._id,
           type: 'appointment',
@@ -484,6 +493,8 @@ const getLineDetails = async (req, res) => {
         }));
 
         appointmentCount = appointments.length;
+        
+        console.log(`DEBUG: Returning ${appointmentCount} appointments for display`);
       } catch (appointmentError) {
         console.error('Error getting appointments:', appointmentError);
         appointments = [];
