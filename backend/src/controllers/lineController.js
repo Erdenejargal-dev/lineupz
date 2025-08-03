@@ -423,9 +423,74 @@ const getLineDetails = async (req, res) => {
       });
     }
 
-    // Get current queue
-    const queue = await LineJoiner.getLineQueue(lineId, 'waiting');
-    const queueCount = queue.length;
+    const serviceType = line.serviceType || 'queue';
+    let queue = [];
+    let appointments = [];
+    let queueCount = 0;
+    let appointmentCount = 0;
+
+    // Get current queue for queue-based or hybrid lines
+    if (serviceType === 'queue' || serviceType === 'hybrid') {
+      try {
+        queue = await LineJoiner.getLineQueue(lineId, 'waiting');
+        queueCount = queue.length;
+      } catch (queueError) {
+        console.error('Error getting queue:', queueError);
+        queue = [];
+        queueCount = 0;
+      }
+    }
+
+    // Get appointments for appointment-based or hybrid lines
+    if (serviceType === 'appointments' || serviceType === 'hybrid') {
+      try {
+        const Appointment = require('../models/Appointment');
+        
+        // Get today's and upcoming appointments
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const upcomingAppointments = await Appointment.find({
+          line: lineId,
+          appointmentTime: { $gte: today },
+          status: { $in: ['confirmed', 'pending', 'in_progress'] }
+        })
+        .populate('user', 'name phone userId')
+        .sort({ appointmentTime: 1 })
+        .limit(20); // Limit to next 20 appointments
+
+        appointments = upcomingAppointments.map(appointment => ({
+          _id: appointment._id,
+          type: 'appointment',
+          userId: appointment.user?.userId || 'Unknown',
+          name: appointment.user?.name || 'Anonymous',
+          phone: appointment.user?.phone,
+          appointmentTime: appointment.appointmentTime,
+          endTime: appointment.endTime,
+          duration: appointment.duration,
+          status: appointment.status,
+          notes: appointment.notes || '', // Customer message/notes
+          joinedAt: appointment.createdAt,
+          formattedTime: appointment.appointmentTime.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          }),
+          formattedDate: appointment.appointmentTime.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric'
+          })
+        }));
+
+        appointmentCount = appointments.length;
+      } catch (appointmentError) {
+        console.error('Error getting appointments:', appointmentError);
+        appointments = [];
+        appointmentCount = 0;
+      }
+    }
+
     const estimatedWaitTime = await line.getEstimatedWaitTime();
 
     res.json({
@@ -433,16 +498,43 @@ const getLineDetails = async (req, res) => {
       line: {
         ...line.toObject(),
         queueCount,
+        appointmentCount,
+        totalCustomers: queueCount + appointmentCount,
         estimatedWaitTime,
         isAvailable: line.isCurrentlyAvailable(),
+        // Queue data (for queue/hybrid lines)
         queue: queue.map(joiner => ({
           _id: joiner._id,
+          type: 'queue',
           userId: joiner.user.userId,
           name: joiner.user.name || 'Anonymous',
           position: joiner.position,
           joinedAt: joiner.joinedAt,
-          estimatedWaitTime: joiner.estimatedWaitTime
-        }))
+          estimatedWaitTime: joiner.estimatedWaitTime,
+          notes: joiner.notes || '' // Queue notes if any
+        })),
+        // Appointment data (for appointment/hybrid lines)
+        appointments: appointments,
+        // Combined view for hybrid lines
+        allCustomers: [
+          ...queue.map(joiner => ({
+            _id: joiner._id,
+            type: 'queue',
+            userId: joiner.user.userId,
+            name: joiner.user.name || 'Anonymous',
+            position: joiner.position,
+            joinedAt: joiner.joinedAt,
+            estimatedWaitTime: joiner.estimatedWaitTime,
+            notes: joiner.notes || '',
+            status: 'waiting'
+          })),
+          ...appointments
+        ].sort((a, b) => {
+          // Sort by appointment time for appointments, join time for queue
+          const timeA = a.appointmentTime || a.joinedAt;
+          const timeB = b.appointmentTime || b.joinedAt;
+          return new Date(timeA) - new Date(timeB);
+        })
       }
     });
 
