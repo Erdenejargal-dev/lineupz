@@ -42,13 +42,23 @@ const getAvailableSlots = async (req, res) => {
     }
     
     // Check if the requested date is within allowed booking window
-    const requestedDate = new Date(date);
+    const requestedDate = new Date(date + 'T00:00:00.000Z'); // Ensure UTC
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
+    
     const maxAdvanceDays = line.appointmentSettings?.advanceBookingDays || 7;
     
     // Handle fractional days (e.g., 0.04 for 1 hour)
     const maxAdvanceMilliseconds = maxAdvanceDays * 24 * 60 * 60 * 1000;
     const maxDate = new Date(today.getTime() + maxAdvanceMilliseconds);
+    
+    // Check if requested date is in the past
+    if (requestedDate < today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot book appointments for past dates'
+      });
+    }
     
     if (requestedDate > maxDate) {
       const advanceText = maxAdvanceDays < 1 ? 
@@ -80,8 +90,21 @@ const getAvailableSlots = async (req, res) => {
     const duration = line.appointmentSettings?.duration || 30;
     const interval = line.appointmentSettings?.slotInterval || 30;
     
-    const startTime = new Date(`${date}T${daySchedule.startTime}:00`);
-    const endTime = new Date(`${date}T${daySchedule.endTime}:00`);
+    // Parse start and end times properly
+    const [startHour, startMinute] = daySchedule.startTime.split(':').map(Number);
+    const [endHour, endMinute] = daySchedule.endTime.split(':').map(Number);
+    
+    // Create start and end times for the specific date
+    const startTime = new Date(date + 'T00:00:00.000Z');
+    startTime.setUTCHours(startHour, startMinute, 0, 0);
+    
+    const endTime = new Date(date + 'T00:00:00.000Z');
+    endTime.setUTCHours(endHour, endMinute, 0, 0);
+    
+    console.log(`Generating slots for ${date}:`);
+    console.log(`Start time: ${startTime.toISOString()}`);
+    console.log(`End time: ${endTime.toISOString()}`);
+    console.log(`Duration: ${duration} minutes, Interval: ${interval} minutes`);
     
     let currentSlot = new Date(startTime);
     
@@ -93,9 +116,12 @@ const getAvailableSlots = async (req, res) => {
           endTime: new Date(slotEnd),
           available: true // Will be checked against existing appointments
         });
+        console.log(`Generated slot: ${currentSlot.toISOString()} - ${slotEnd.toISOString()}`);
       }
       currentSlot = new Date(currentSlot.getTime() + interval * 60000);
     }
+    
+    console.log(`Total slots generated: ${slots.length}`);
     
     // Get existing appointments for this date
     const startOfDay = new Date(`${date}T00:00:00.000Z`);
@@ -188,22 +214,44 @@ const bookAppointment = async (req, res) => {
       });
     }
     
-    // Check if slot is still available
-    const conflictingAppointment = await Appointment.findOne({
+    // Check if slot is still available - improved overlap detection
+    const conflictingAppointments = await Appointment.find({
       line: line._id,
+      status: { $in: ['confirmed', 'pending', 'in_progress'] },
       $or: [
+        // New appointment starts during existing appointment
+        {
+          appointmentTime: { $lte: startTime },
+          endTime: { $gt: startTime }
+        },
+        // New appointment ends during existing appointment
         {
           appointmentTime: { $lt: endTime },
-          endTime: { $gt: startTime }
+          endTime: { $gte: endTime }
+        },
+        // New appointment completely contains existing appointment
+        {
+          appointmentTime: { $gte: startTime },
+          endTime: { $lte: endTime }
+        },
+        // Existing appointment completely contains new appointment
+        {
+          appointmentTime: { $lte: startTime },
+          endTime: { $gte: endTime }
         }
-      ],
-      status: { $in: ['confirmed', 'pending', 'in_progress'] }
+      ]
     });
     
-    if (conflictingAppointment) {
+    if (conflictingAppointments.length > 0) {
+      console.log(`Booking conflict detected for ${startTime.toISOString()} - ${endTime.toISOString()}`);
+      console.log('Conflicting appointments:', conflictingAppointments.map(apt => ({
+        start: apt.appointmentTime.toISOString(),
+        end: apt.endTime.toISOString()
+      })));
+      
       return res.status(409).json({
         success: false,
-        message: 'This time slot is no longer available'
+        message: 'This time slot is no longer available due to overlapping appointments'
       });
     }
     
