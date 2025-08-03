@@ -192,7 +192,8 @@ lineSchema.methods.getCurrentQueueCount = async function() {
 // Method to get estimated wait time
 lineSchema.methods.getEstimatedWaitTime = async function() {
   const queueCount = await this.getCurrentQueueCount();
-  return queueCount * this.settings.estimatedServiceTime;
+  const serviceTime = this.settings?.estimatedServiceTime || 5; // Default to 5 minutes
+  return queueCount * serviceTime;
 };
 
 // Method to get available appointment slots

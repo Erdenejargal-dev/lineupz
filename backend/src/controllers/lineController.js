@@ -491,7 +491,21 @@ const getLineDetails = async (req, res) => {
       }
     }
 
-    const estimatedWaitTime = await line.getEstimatedWaitTime();
+    let estimatedWaitTime = 0;
+    try {
+      estimatedWaitTime = await line.getEstimatedWaitTime();
+    } catch (waitTimeError) {
+      console.error('Error calculating wait time:', waitTimeError);
+      estimatedWaitTime = queueCount * (line.settings?.estimatedServiceTime || 5);
+    }
+
+    let isAvailable = false;
+    try {
+      isAvailable = line.isCurrentlyAvailable();
+    } catch (availabilityError) {
+      console.error('Error checking availability:', availabilityError);
+      isAvailable = line.availability?.isActive || false;
+    }
 
     res.json({
       success: true,
@@ -501,7 +515,7 @@ const getLineDetails = async (req, res) => {
         appointmentCount,
         totalCustomers: queueCount + appointmentCount,
         estimatedWaitTime,
-        isAvailable: line.isCurrentlyAvailable(),
+        isAvailable,
         // Queue data (for queue/hybrid lines)
         queue: queue.map(joiner => ({
           _id: joiner._id,
