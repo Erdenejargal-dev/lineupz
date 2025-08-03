@@ -89,7 +89,7 @@ const getAvailableSlots = async (req, res) => {
       
       return res.status(400).json({
         success: false,
-        message: `Appointments can only be booked ${advanceText} in advance`
+        message: `Appointments can only be booked up to ${advanceText} in advance`
       });
     }
     
