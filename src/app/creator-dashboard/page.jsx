@@ -1685,28 +1685,7 @@ const LineManagementModal = ({ line, onClose, onUpdate }) => {
           )}
 
           {activeTab === 'queue' && (
-            <div>
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{line.queueCount || 0}</div>
-                  <div className="text-sm text-gray-600">In Queue</div>
-                </div>
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">{line.estimatedWaitTime || 0}m</div>
-                  <div className="text-sm text-gray-600">Est. Wait</div>
-                </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{line.settings?.maxCapacity || 0}</div>
-                  <div className="text-sm text-gray-600">Capacity</div>
-                </div>
-              </div>
-
-              <div className="text-center py-8 text-gray-500">
-                <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>Queue management coming soon</p>
-                <p className="text-sm">Real-time queue monitoring and management tools</p>
-              </div>
-            </div>
+            <QueueManagementTab line={line} />
           )}
 
           {/* Actions */}
@@ -1726,6 +1705,217 @@ const LineManagementModal = ({ line, onClose, onUpdate }) => {
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Queue Management Tab Component
+const QueueManagementTab = ({ line }) => {
+  const [queueData, setQueueData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadQueueData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/lines/${line._id}/details`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to load queue data');
+      }
+
+      setQueueData(data);
+    } catch (error) {
+      console.error('Failed to load queue data:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadQueueData();
+  }, [line._id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <RefreshCw className="h-8 w-8 animate-spin text-gray-600" />
+        <span className="ml-2 text-gray-600">Loading customers...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+        <button
+          onClick={loadQueueData}
+          className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  const queueCustomers = queueData?.queue || [];
+  const appointmentCustomers = queueData?.appointments || [];
+  const totalCustomers = queueCustomers.length + appointmentCustomers.length;
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="text-center p-4 bg-blue-50 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600">{queueCustomers.length}</div>
+          <div className="text-sm text-gray-600">In Queue</div>
+        </div>
+        <div className="text-center p-4 bg-purple-50 rounded-lg">
+          <div className="text-2xl font-bold text-purple-600">{appointmentCustomers.length}</div>
+          <div className="text-sm text-gray-600">Appointments</div>
+        </div>
+        <div className="text-center p-4 bg-green-50 rounded-lg">
+          <div className="text-2xl font-bold text-green-600">{totalCustomers}</div>
+          <div className="text-sm text-gray-600">Total Customers</div>
+        </div>
+      </div>
+
+      {/* Refresh Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={loadQueueData}
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </button>
+      </div>
+
+      {/* Customer Lists */}
+      <div className="space-y-6">
+        {/* Queue Customers */}
+        {queueCustomers.length > 0 && (
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              Queue Customers ({queueCustomers.length})
+            </h4>
+            <div className="space-y-2">
+              {queueCustomers.map((customer, index) => (
+                <div key={customer._id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-semibold text-blue-600">#{index + 1}</span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900">{customer.name || 'Anonymous'}</div>
+                      <div className="text-sm text-gray-500">ID: {customer.userId}</div>
+                      <div className="text-xs text-gray-400">
+                        Joined: {new Date(customer.joinedAt).toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                      Queue
+                    </span>
+                    <div className="text-sm text-gray-500">
+                      Wait: ~{Math.max(1, index * (line.settings?.estimatedServiceTime || 5))}m
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Appointment Customers */}
+        {appointmentCustomers.length > 0 && (
+          <div>
+            <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-purple-600" />
+              Appointment Customers ({appointmentCustomers.length})
+            </h4>
+            <div className="space-y-2">
+              {appointmentCustomers.map((appointment) => (
+                <div key={appointment._id} className="p-4 bg-white border border-gray-200 rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="font-medium text-gray-900">{appointment.customerName}</div>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                          appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          appointment.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {appointment.status?.charAt(0).toUpperCase() + appointment.status?.slice(1) || 'Pending'}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                        <div>
+                          <span className="font-medium">Time:</span> {new Date(appointment.appointmentTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </div>
+                        <div>
+                          <span className="font-medium">Date:</span> {new Date(appointment.appointmentTime).toLocaleDateString([], {weekday: 'short', month: 'short', day: 'numeric'})}
+                        </div>
+                        <div>
+                          <span className="font-medium">Duration:</span> {appointment.duration || 30} minutes
+                        </div>
+                        <div>
+                          <span className="font-medium">Phone:</span> {appointment.customerPhone || 'Not provided'}
+                        </div>
+                      </div>
+
+                      {/* Customer Message */}
+                      {appointment.customerMessage && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3">
+                          <div className="text-sm font-medium text-blue-900 mb-1">Customer Message:</div>
+                          <div className="text-sm text-blue-800">{appointment.customerMessage}</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="ml-4">
+                      <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">
+                        Appointment
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No Customers */}
+        {totalCustomers === 0 && (
+          <div className="text-center py-12">
+            <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No customers yet</h3>
+            <p className="text-gray-600 mb-4">
+              {line.serviceType === 'queue' && 'People who join your queue will appear here.'}
+              {line.serviceType === 'appointments' && 'Customers who book appointments will appear here.'}
+              {line.serviceType === 'hybrid' && 'Both queue joiners and appointment bookers will appear here.'}
+            </p>
+            <div className="text-sm text-gray-500">
+              Share your line code: <span className="font-mono font-bold">{line.lineCode}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
