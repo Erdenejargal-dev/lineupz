@@ -98,12 +98,6 @@ const createLine = async (req, res) => {
           });
         }
 
-        if (advanceBookingDays && (advanceBookingDays < 0.04 || advanceBookingDays > 90)) {
-          return res.status(400).json({
-            success: false,
-            message: 'Advance booking must be between 1 hour and 90 days'
-          });
-        }
 
         if (cancellationHours && (cancellationHours < 0 || cancellationHours > 72)) {
           return res.status(400).json({

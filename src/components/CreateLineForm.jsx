@@ -94,10 +94,6 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
       if (formData.appointmentSettings.duration < 5 || formData.appointmentSettings.duration > 480) {
         newErrors.appointmentDuration = 'Duration must be between 5 and 480 minutes';
       }
-
-      if (formData.appointmentSettings.advanceBookingDays < 0 || formData.appointmentSettings.advanceBookingDays > 90) {
-        newErrors.advanceBooking = 'Advance booking must be between 0 and 90 days';
-      }
     }
 
     // Schedule validation
@@ -353,29 +349,6 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Advance Booking
-                  </label>
-                  <select
-                    value={formData.appointmentSettings.advanceBookingDays}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      appointmentSettings: {
-                        ...formData.appointmentSettings,
-                        advanceBookingDays: parseFloat(e.target.value)
-                      }
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value={0.04}>1 hour ahead</option>
-                    <option value={1}>1 day ahead</option>
-                    <option value={3}>3 days ahead</option>
-                    <option value={7}>1 week ahead</option>
-                    <option value={14}>2 weeks ahead</option>
-                    <option value={30}>1 month ahead</option>
-                  </select>
-                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
