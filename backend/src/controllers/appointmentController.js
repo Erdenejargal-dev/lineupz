@@ -20,9 +20,13 @@ const getAvailableSlots = async (req, res) => {
     console.log('=== GET AVAILABLE SLOTS REQUEST ===');
     console.log('Params:', req.params);
     console.log('Query:', req.query);
+    console.log('Request headers:', req.headers);
     
     const { lineCode } = req.params;
     const { date } = req.query; // YYYY-MM-DD format
+    
+    console.log('Extracted lineCode:', lineCode);
+    console.log('Extracted date:', date);
     
     if (!date) {
       console.log('ERROR: No date parameter provided');
@@ -33,7 +37,19 @@ const getAvailableSlots = async (req, res) => {
     }
     
     console.log(`Looking for line with code: ${lineCode}`);
-    const line = await Line.findOne({ lineCode, isActive: true });
+    
+    let line;
+    try {
+      line = await Line.findOne({ lineCode, isActive: true });
+      console.log('Database query successful');
+    } catch (dbError) {
+      console.error('Database error when finding line:', dbError);
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection error'
+      });
+    }
+    
     if (!line) {
       console.log('ERROR: Line not found or inactive');
       return res.status(404).json({
@@ -74,12 +90,21 @@ const getAvailableSlots = async (req, res) => {
     }
 
     // Check if the requested date is within allowed booking window
-    const requestedDate = new Date(date + 'T00:00:00.000Z'); // Ensure UTC
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Start of today
-    
-    console.log(`Requested date: ${requestedDate.toISOString()}`);
-    console.log(`Today: ${today.toISOString()}`);
+    let requestedDate, today;
+    try {
+      requestedDate = new Date(date + 'T00:00:00.000Z'); // Ensure UTC
+      today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of today
+      
+      console.log(`Requested date: ${requestedDate.toISOString()}`);
+      console.log(`Today: ${today.toISOString()}`);
+    } catch (dateError) {
+      console.error('Date parsing error:', dateError);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format'
+      });
+    }
     
     const maxAdvanceDays = line.appointmentSettings?.advanceBookingDays || 7;
     console.log(`Max advance days: ${maxAdvanceDays}`);
@@ -112,8 +137,17 @@ const getAvailableSlots = async (req, res) => {
     }
     
     // Get day of week
-    const dayOfWeek = requestedDate.toLocaleDateString('en-US', { weekday: 'lowercase' });
-    console.log(`Day of week: ${dayOfWeek}`);
+    let dayOfWeek;
+    try {
+      dayOfWeek = requestedDate.toLocaleDateString('en-US', { weekday: 'lowercase' });
+      console.log(`Day of week: ${dayOfWeek}`);
+    } catch (localeError) {
+      console.error('Locale error:', localeError);
+      // Fallback method
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      dayOfWeek = days[requestedDate.getDay()];
+      console.log(`Day of week (fallback): ${dayOfWeek}`);
+    }
     
     // Check if line has availability schedule
     if (!line.availability || !line.availability.schedule || !Array.isArray(line.availability.schedule)) {
@@ -129,7 +163,9 @@ const getAvailableSlots = async (req, res) => {
     // Find schedule for this day
     const daySchedule = line.availability.schedule.find(s => s.day === dayOfWeek);
     console.log(`Schedule for ${dayOfWeek}:`, daySchedule);
+    
     if (!daySchedule || !daySchedule.isAvailable) {
+      console.log(`No availability on ${dayOfWeek}`);
       return res.json({
         success: true,
         date,
@@ -138,56 +174,86 @@ const getAvailableSlots = async (req, res) => {
       });
     }
     
+    // Validate schedule times
+    if (!daySchedule.startTime || !daySchedule.endTime) {
+      console.log('ERROR: Invalid schedule times');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid schedule configuration'
+      });
+    }
+    
     // Generate time slots
     const slots = [];
     const duration = line.appointmentSettings?.duration || 30;
     const interval = line.appointmentSettings?.slotInterval || 30;
     
-    // Parse start and end times properly
-    const [startHour, startMinute] = daySchedule.startTime.split(':').map(Number);
-    const [endHour, endMinute] = daySchedule.endTime.split(':').map(Number);
-    
-    // Create start and end times for the specific date
-    const startTime = new Date(date + 'T00:00:00.000Z');
-    startTime.setUTCHours(startHour, startMinute, 0, 0);
-    
-    const endTime = new Date(date + 'T00:00:00.000Z');
-    endTime.setUTCHours(endHour, endMinute, 0, 0);
-    
-    console.log(`Generating slots for ${date}:`);
-    console.log(`Start time: ${startTime.toISOString()}`);
-    console.log(`End time: ${endTime.toISOString()}`);
-    console.log(`Duration: ${duration} minutes, Interval: ${interval} minutes`);
-    
-    let currentSlot = new Date(startTime);
-    
-    while (currentSlot < endTime) {
-      const slotEnd = new Date(currentSlot.getTime() + duration * 60000);
-      if (slotEnd <= endTime) {
-        slots.push({
-          startTime: new Date(currentSlot),
-          endTime: new Date(slotEnd),
-          available: true // Will be checked against existing appointments
-        });
-        console.log(`Generated slot: ${currentSlot.toISOString()} - ${slotEnd.toISOString()}`);
+    try {
+      // Parse start and end times properly
+      const [startHour, startMinute] = daySchedule.startTime.split(':').map(Number);
+      const [endHour, endMinute] = daySchedule.endTime.split(':').map(Number);
+      
+      // Validate parsed times
+      if (isNaN(startHour) || isNaN(startMinute) || isNaN(endHour) || isNaN(endMinute)) {
+        throw new Error('Invalid time format in schedule');
       }
-      currentSlot = new Date(currentSlot.getTime() + interval * 60000);
+      
+      // Create start and end times for the specific date
+      const startTime = new Date(date + 'T00:00:00.000Z');
+      startTime.setUTCHours(startHour, startMinute, 0, 0);
+      
+      const endTime = new Date(date + 'T00:00:00.000Z');
+      endTime.setUTCHours(endHour, endMinute, 0, 0);
+      
+      console.log(`Generating slots for ${date}:`);
+      console.log(`Start time: ${startTime.toISOString()}`);
+      console.log(`End time: ${endTime.toISOString()}`);
+      console.log(`Duration: ${duration} minutes, Interval: ${interval} minutes`);
+      
+      let currentSlot = new Date(startTime);
+      
+      while (currentSlot < endTime) {
+        const slotEnd = new Date(currentSlot.getTime() + duration * 60000);
+        if (slotEnd <= endTime) {
+          slots.push({
+            startTime: new Date(currentSlot),
+            endTime: new Date(slotEnd),
+            available: true // Will be checked against existing appointments
+          });
+          console.log(`Generated slot: ${currentSlot.toISOString()} - ${slotEnd.toISOString()}`);
+        }
+        currentSlot = new Date(currentSlot.getTime() + interval * 60000);
+      }
+      
+      console.log(`Total slots generated: ${slots.length}`);
+    } catch (timeError) {
+      console.error('Time parsing error:', timeError);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid schedule time format'
+      });
     }
     
-    console.log(`Total slots generated: ${slots.length}`);
-    
     // Get existing appointments for this date
-    const startOfDay = new Date(`${date}T00:00:00.000Z`);
-    const endOfDay = new Date(`${date}T23:59:59.999Z`);
-    
-    const existingAppointments = await Appointment.find({
-      line: line._id,
-      appointmentTime: {
-        $gte: startOfDay,
-        $lte: endOfDay
-      },
-      status: { $in: ['confirmed', 'pending', 'in_progress'] }
-    });
+    let existingAppointments = [];
+    try {
+      const startOfDay = new Date(`${date}T00:00:00.000Z`);
+      const endOfDay = new Date(`${date}T23:59:59.999Z`);
+      
+      existingAppointments = await Appointment.find({
+        line: line._id,
+        appointmentTime: {
+          $gte: startOfDay,
+          $lte: endOfDay
+        },
+        status: { $in: ['confirmed', 'pending', 'in_progress'] }
+      });
+      
+      console.log(`Found ${existingAppointments.length} existing appointments`);
+    } catch (appointmentError) {
+      console.error('Error fetching existing appointments:', appointmentError);
+      // Continue without existing appointments check
+    }
     
     // Mark slots as unavailable if they conflict with existing appointments
     const availableSlots = slots.map(slot => {
@@ -205,6 +271,8 @@ const getAvailableSlots = async (req, res) => {
       };
     });
     
+    console.log(`Returning ${availableSlots.length} slots, ${availableSlots.filter(s => s.available).length} available`);
+    
     res.json({
       success: true,
       date,
@@ -215,9 +283,11 @@ const getAvailableSlots = async (req, res) => {
     
   } catch (error) {
     console.error('Get available slots error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Failed to get available slots'
+      message: 'Failed to get available slots',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
