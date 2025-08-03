@@ -459,12 +459,20 @@ const getLineDetails = async (req, res) => {
         console.log(`DEBUG: Found ${allAppointments.length} total appointments for line ${line.lineCode}`);
         
         // Get today's and upcoming appointments
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const now = new Date();
+        console.log(`DEBUG: Current time: ${now.toISOString()}`);
         
-        const upcomingAppointments = allAppointments.filter(appointment => 
-          new Date(appointment.appointmentTime) >= today
-        );
+        // Set to start of today in UTC to include all appointments from today onwards
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        console.log(`DEBUG: Today start (UTC): ${today.toISOString()}`);
+        
+        const upcomingAppointments = allAppointments.filter(appointment => {
+          const appointmentDate = new Date(appointment.appointmentTime);
+          const isUpcoming = appointmentDate >= today;
+          console.log(`DEBUG: Appointment ${appointment._id} at ${appointmentDate.toISOString()} - isUpcoming: ${isUpcoming}`);
+          return isUpcoming;
+        });
         
         console.log(`DEBUG: Found ${upcomingAppointments.length} upcoming appointments for line ${line.lineCode}`);
         
