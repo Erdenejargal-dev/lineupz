@@ -35,20 +35,61 @@ router.get('/debug/:lineCode', async (req, res) => {
     
     console.log(`DEBUG: Found ${allAppointments.length} appointments for line ${lineCode}`);
     
+    // Simulate the exact same filtering logic as getLineDetails
+    const now = new Date();
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    
+    const upcomingAppointments = allAppointments.filter(appointment => {
+      const appointmentDate = new Date(appointment.appointmentTime);
+      const isUpcoming = appointmentDate >= today;
+      return isUpcoming && ['confirmed', 'pending', 'in_progress'].includes(appointment.status);
+    });
+    
+    const formattedAppointments = upcomingAppointments.map(appointment => ({
+      _id: appointment._id,
+      type: 'appointment',
+      userId: appointment.user?.userId || 'Unknown',
+      customerName: appointment.user?.name || 'Anonymous',
+      customerPhone: appointment.user?.phone,
+      appointmentTime: appointment.appointmentTime,
+      endTime: appointment.endTime,
+      duration: appointment.duration,
+      status: appointment.status,
+      customerMessage: appointment.notes || '',
+      joinedAt: appointment.createdAt,
+      formattedTime: appointment.appointmentTime.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }),
+      formattedDate: appointment.appointmentTime.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      })
+    }));
+    
     res.json({
       success: true,
       lineCode,
       lineId: line._id,
       lineTitle: line.title,
       serviceType: line.serviceType,
+      currentTime: now.toISOString(),
+      todayStart: today.toISOString(),
       totalAppointments: allAppointments.length,
-      appointments: allAppointments.map(apt => ({
+      upcomingAppointments: upcomingAppointments.length,
+      dashboardWillShow: formattedAppointments,
+      rawAppointments: allAppointments.map(apt => ({
         _id: apt._id,
         appointmentTime: apt.appointmentTime,
         status: apt.status,
         notes: apt.notes,
         user: apt.user,
-        createdAt: apt.createdAt
+        createdAt: apt.createdAt,
+        isUpcoming: new Date(apt.appointmentTime) >= today,
+        hasValidStatus: ['confirmed', 'pending', 'in_progress'].includes(apt.status)
       }))
     });
     
