@@ -103,7 +103,7 @@ Authorization: Bearer your_jwt_token
 ```json
 {
   "success": true,
-  "message": "SMS sent successfully via Android Gateway",
+  "message": "SMS sent successfully via Cloud SMS",
   "messageId": "msg_12345"
 }
 ```

@@ -80,6 +80,14 @@ export class ApiClient {
     });
   }
 
+  // SMS testing method
+  async sendTestSMS(phoneNumber, message) {
+    return this.request('/notifications/test', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, message }),
+    });
+  }
+
   // Line methods
   async getLineByCode(code) {
     return this.request(`/lines/code/${code}`);

@@ -45,7 +45,7 @@ const sendSMS = async (phoneNumber, message) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.SMS_API_KEY}`
+          'Authorization': process.env.SMS_API_KEY
         },
         body: JSON.stringify({
           to: formattedPhone,

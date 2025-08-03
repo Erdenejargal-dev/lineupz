@@ -43,7 +43,7 @@ SMS_API_KEY=512037a7-d978-4ac2-b083-94624981862d
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${SMS_API_KEY}`
+    'Authorization': SMS_API_KEY
   },
   body: JSON.stringify({
     to: phoneNumber,
