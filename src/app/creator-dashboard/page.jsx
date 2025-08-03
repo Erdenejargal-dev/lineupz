@@ -6,6 +6,7 @@ import {
   UserCheck, BarChart3, Settings, Copy, Check, QrCode,
   TrendingUp, Calendar, User
 } from 'lucide-react';
+import CreateLineForm from '../../components/CreateLineForm';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
@@ -422,13 +423,13 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing, loa
 
       {/* Create Form Modal */}
       {showCreateForm && (
-        <CreateLineModal 
+        <CreateLineForm 
           onClose={() => setShowCreateForm(false)}
           onSubmit={(formData) => {
             handleCreateSubmit(formData);
             setShowCreateForm(false);
           }}
-          refreshing={refreshing}
+          loading={refreshing}
         />
       )}
 

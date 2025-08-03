@@ -86,16 +86,32 @@ const lineSchema = new mongoose.Schema({
       required: function() {
         return this.serviceType === 'queue' || this.serviceType === 'hybrid' || !this.serviceType;
       },
-      min: 1,
-      max: 200
+      min: [1, 'Max capacity must be at least 1'],
+      max: [200, 'Max capacity cannot exceed 200'],
+      validate: {
+        validator: function(value) {
+          // Only validate if this is a queue or hybrid line
+          if (this.serviceType === 'appointments') return true;
+          return value && value >= 1 && value <= 200;
+        },
+        message: 'Max capacity must be between 1 and 200 for queue-based lines'
+      }
     },
     estimatedServiceTime: {
       type: Number,
       required: function() {
         return this.serviceType === 'queue' || this.serviceType === 'hybrid' || !this.serviceType;
       },
-      min: 1,
-      max: 240
+      min: [1, 'Service time must be at least 1 minute'],
+      max: [240, 'Service time cannot exceed 240 minutes'],
+      validate: {
+        validator: function(value) {
+          // Only validate if this is a queue or hybrid line
+          if (this.serviceType === 'appointments') return true;
+          return value && value >= 1 && value <= 240;
+        },
+        message: 'Service time must be between 1 and 240 minutes for queue-based lines'
+      }
     }
   },
   

@@ -23,75 +23,183 @@ const createLine = async (req, res) => {
       description, 
       maxCapacity,
       estimatedServiceTime,
-      serviceType,           // NEW FIELD
-      appointmentSettings,   // NEW FIELD
-      schedule,              // NEW FIELD - from frontend
+      serviceType,
+      appointmentSettings,
+      schedule,
       codeType 
     } = req.body;
 
-    // Validation - only require capacity and service time for queue/hybrid lines
-    if (!title) {
+    // Enhanced validation
+    if (!title || title.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Line title is required'
+        message: 'Line title is required and cannot be empty'
       });
     }
 
-    if ((serviceType === 'queue' || serviceType === 'hybrid' || !serviceType) && (!maxCapacity || !estimatedServiceTime)) {
+    if (title.length > 100) {
       return res.status(400).json({
         success: false,
-        message: 'Max capacity and estimated service time are required for queue-based lines'
+        message: 'Line title cannot be more than 100 characters'
       });
+    }
+
+    if (description && description.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: 'Description cannot be more than 500 characters'
+      });
+    }
+
+    // Validate service type
+    const validServiceTypes = ['queue', 'appointments', 'hybrid'];
+    const finalServiceType = serviceType || 'queue';
+    
+    if (!validServiceTypes.includes(finalServiceType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid service type. Must be queue, appointments, or hybrid'
+      });
+    }
+
+    // Validate capacity and service time for queue/hybrid lines
+    if (finalServiceType === 'queue' || finalServiceType === 'hybrid') {
+      if (!maxCapacity || maxCapacity < 1 || maxCapacity > 200) {
+        return res.status(400).json({
+          success: false,
+          message: 'Max capacity must be between 1 and 200 for queue-based lines'
+        });
+      }
+
+      if (!estimatedServiceTime || estimatedServiceTime < 1 || estimatedServiceTime > 240) {
+        return res.status(400).json({
+          success: false,
+          message: 'Estimated service time must be between 1 and 240 minutes for queue-based lines'
+        });
+      }
+    }
+
+    // Validate appointment settings for appointment/hybrid lines
+    if (finalServiceType === 'appointments' || finalServiceType === 'hybrid') {
+      if (appointmentSettings) {
+        const { duration, slotInterval, advanceBookingDays, cancellationHours } = appointmentSettings;
+        
+        if (duration && (duration < 5 || duration > 480)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Appointment duration must be between 5 and 480 minutes'
+          });
+        }
+
+        if (slotInterval && ![15, 30, 60].includes(slotInterval)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Slot interval must be 15, 30, or 60 minutes'
+          });
+        }
+
+        if (advanceBookingDays && (advanceBookingDays < 0 || advanceBookingDays > 90)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Advance booking days must be between 0 and 90'
+          });
+        }
+
+        if (cancellationHours && (cancellationHours < 0 || cancellationHours > 72)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Cancellation hours must be between 0 and 72'
+          });
+        }
+      }
+    }
+
+    // Validate schedule if provided
+    if (schedule && Array.isArray(schedule)) {
+      const validDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      
+      for (const daySchedule of schedule) {
+        if (!validDays.includes(daySchedule.day)) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid day: ${daySchedule.day}`
+          });
+        }
+
+        if (daySchedule.isAvailable) {
+          if (!timeRegex.test(daySchedule.startTime) || !timeRegex.test(daySchedule.endTime)) {
+            return res.status(400).json({
+              success: false,
+              message: 'Invalid time format. Use HH:MM format'
+            });
+          }
+
+          // Check if end time is after start time
+          const startMinutes = parseInt(daySchedule.startTime.split(':')[0]) * 60 + parseInt(daySchedule.startTime.split(':')[1]);
+          const endMinutes = parseInt(daySchedule.endTime.split(':')[0]) * 60 + parseInt(daySchedule.endTime.split(':')[1]);
+          
+          if (endMinutes <= startMinutes) {
+            return res.status(400).json({
+              success: false,
+              message: `End time must be after start time for ${daySchedule.day}`
+            });
+          }
+        }
+      }
     }
 
     // Generate unique 6-digit code
-    let lineCode;
-    let isUnique = false;
-    while (!isUnique) {
-      lineCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const existingLine = await Line.findOne({ lineCode });
-      if (!existingLine) isUnique = true;
-    }
+    const lineCode = await generateLineCode();
+
+    // Prepare default schedule
+    const defaultSchedule = [
+      { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'tuesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'wednesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'thursday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
+      { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
+      { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false }
+    ];
 
     // Prepare line data
     const lineData = {
       creator: req.userId,
-      title,
-      description,
+      title: title.trim(),
+      description: description ? description.trim() : '',
       lineCode,
-      serviceType: serviceType || 'queue',    // NEW: Default to queue
-      settings: {
-        maxCapacity,
-        estimatedServiceTime
-      },
+      serviceType: finalServiceType,
       availability: {
         isActive: true,
-        schedule: schedule || [
-          { day: 'monday', startTime: '09:00', endTime: '17:00', isAvailable: true },
-          { day: 'tuesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
-          { day: 'wednesday', startTime: '09:00', endTime: '17:00', isAvailable: true },
-          { day: 'thursday', startTime: '09:00', endTime: '17:00', isAvailable: true },
-          { day: 'friday', startTime: '09:00', endTime: '17:00', isAvailable: true },
-          { day: 'saturday', startTime: '10:00', endTime: '16:00', isAvailable: false },
-          { day: 'sunday', startTime: '10:00', endTime: '16:00', isAvailable: false }
-        ]
+        schedule: schedule && Array.isArray(schedule) && schedule.length > 0 ? schedule : defaultSchedule
       },
-      codeType: codeType || 'stable'
+      codeType: codeType || 'stable',
+      isActive: true
     };
 
-    // NEW: Add appointmentSettings for appointment/hybrid lines
-    if (serviceType === 'appointments' || serviceType === 'hybrid') {
-      lineData.appointmentSettings = appointmentSettings || {
-        duration: 30,
-        slotInterval: 30,
-        advanceBookingDays: 7,
-        bufferTime: 5,
-        cancellationHours: 2,
-        autoConfirm: true,
-        maxConcurrentAppointments: 1
+    // Add settings for queue/hybrid lines
+    if (finalServiceType === 'queue' || finalServiceType === 'hybrid') {
+      lineData.settings = {
+        maxCapacity: parseInt(maxCapacity),
+        estimatedServiceTime: parseInt(estimatedServiceTime)
       };
     }
 
+    // Add appointment settings for appointment/hybrid lines
+    if (finalServiceType === 'appointments' || finalServiceType === 'hybrid') {
+      lineData.appointmentSettings = {
+        duration: appointmentSettings?.duration || 30,
+        slotInterval: appointmentSettings?.slotInterval || 30,
+        advanceBookingDays: appointmentSettings?.advanceBookingDays || 7,
+        bufferTime: appointmentSettings?.bufferTime || 5,
+        cancellationHours: appointmentSettings?.cancellationHours || 2,
+        autoConfirm: appointmentSettings?.autoConfirm !== false, // Default to true
+        maxConcurrentAppointments: appointmentSettings?.maxConcurrentAppointments || 1
+      };
+    }
+
+    // Create and save the line
     const line = new Line(lineData);
     await line.save();
 
@@ -101,6 +209,7 @@ const createLine = async (req, res) => {
       $inc: { totalLinesCreated: 1 }
     });
 
+    // Return success response
     res.status(201).json({
       success: true,
       message: 'Line created successfully',
@@ -109,8 +218,8 @@ const createLine = async (req, res) => {
         title: line.title,
         description: line.description,
         lineCode: line.lineCode,
-        serviceType: line.serviceType,           // NEW
-        appointmentSettings: line.appointmentSettings, // NEW
+        serviceType: line.serviceType,
+        appointmentSettings: line.appointmentSettings,
         settings: line.settings,
         availability: line.availability,
         isActive: line.isActive,
@@ -120,9 +229,27 @@ const createLine = async (req, res) => {
 
   } catch (error) {
     console.error('Create line error:', error);
+    
+    // Handle mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join(', ')
+      });
+    }
+
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'A line with this code already exists. Please try again.'
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Failed to create line'
+      message: 'Failed to create line. Please try again.'
     });
   }
 };
