@@ -467,12 +467,17 @@ const getLineDetails = async (req, res) => {
         today.setUTCHours(0, 0, 0, 0);
         console.log(`DEBUG: Today start (UTC): ${today.toISOString()}`);
         
-        const upcomingAppointments = allAppointments.filter(appointment => {
-          const appointmentDate = new Date(appointment.appointmentTime);
-          const isUpcoming = appointmentDate >= today;
-          console.log(`DEBUG: Appointment ${appointment._id} at ${appointmentDate.toISOString()} - isUpcoming: ${isUpcoming}`);
-          return isUpcoming;
-        });
+        // TEMPORARY: Show ALL appointments regardless of date for debugging
+        console.log(`DEBUG: Showing ALL appointments for debugging (bypassing date filter)`);
+        const upcomingAppointments = allAppointments; // Show everything
+        
+        // Original filtering logic (commented out for debugging)
+        // const upcomingAppointments = allAppointments.filter(appointment => {
+        //   const appointmentDate = new Date(appointment.appointmentTime);
+        //   const isUpcoming = appointmentDate >= today;
+        //   console.log(`DEBUG: Appointment ${appointment._id} at ${appointmentDate.toISOString()} - isUpcoming: ${isUpcoming}`);
+        //   return isUpcoming;
+        // });
         
         console.log(`DEBUG: Found ${upcomingAppointments.length} upcoming appointments for line ${line.lineCode}`);
         
