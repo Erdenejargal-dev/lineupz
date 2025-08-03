@@ -3,30 +3,49 @@
 
 const Appointment = require('../models/Appointment');
 const Line = require('../models/Line');
-const { notifyAppointmentUpdate } = require('./notificationController');
+
+// Make notification import optional to prevent errors
+let notifyAppointmentUpdate;
+try {
+  const notificationController = require('./notificationController');
+  notifyAppointmentUpdate = notificationController.notifyAppointmentUpdate;
+} catch (error) {
+  console.log('Notification controller not available, SMS notifications disabled');
+  notifyAppointmentUpdate = null;
+}
 
 // Get available slots for a line on a specific date
 const getAvailableSlots = async (req, res) => {
   try {
+    console.log('=== GET AVAILABLE SLOTS REQUEST ===');
+    console.log('Params:', req.params);
+    console.log('Query:', req.query);
+    
     const { lineCode } = req.params;
     const { date } = req.query; // YYYY-MM-DD format
     
     if (!date) {
+      console.log('ERROR: No date parameter provided');
       return res.status(400).json({
         success: false,
         message: 'Date parameter is required (format: YYYY-MM-DD)'
       });
     }
     
+    console.log(`Looking for line with code: ${lineCode}`);
     const line = await Line.findOne({ lineCode, isActive: true });
     if (!line) {
+      console.log('ERROR: Line not found or inactive');
       return res.status(404).json({
         success: false,
         message: 'Line not found'
       });
     }
     
+    console.log(`Found line: ${line.title}, Service type: ${line.serviceType}`);
+    
     if (line.serviceType === 'queue') {
+      console.log('ERROR: Line is queue-only, not appointments');
       return res.status(400).json({
         success: false,
         message: 'This line does not support appointments'
@@ -35,11 +54,14 @@ const getAvailableSlots = async (req, res) => {
 
     // Ensure appointment settings exist
     if (!line.appointmentSettings) {
+      console.log('ERROR: Line missing appointment settings');
       return res.status(400).json({
         success: false,
         message: 'This line is not properly configured for appointments'
       });
     }
+    
+    console.log('Appointment settings:', line.appointmentSettings);
     
     // Check if the requested date is within allowed booking window
     const requestedDate = new Date(date + 'T00:00:00.000Z'); // Ensure UTC
@@ -270,11 +292,15 @@ const bookAppointment = async (req, res) => {
     await appointment.populate(['line', 'user']);
     
     // Send SMS notification for appointment confirmation
-    try {
-      await notifyAppointmentUpdate(appointment._id, 'confirmed');
-    } catch (notificationError) {
-      console.error('Failed to send appointment confirmation SMS:', notificationError);
-      // Don't fail the request if notification fails
+    if (notifyAppointmentUpdate) {
+      try {
+        await notifyAppointmentUpdate(appointment._id, 'confirmed');
+      } catch (notificationError) {
+        console.error('Failed to send appointment confirmation SMS:', notificationError);
+        // Don't fail the request if notification fails
+      }
+    } else {
+      console.log('SMS notifications disabled - notifyAppointmentUpdate not available');
     }
     
     res.status(201).json({
