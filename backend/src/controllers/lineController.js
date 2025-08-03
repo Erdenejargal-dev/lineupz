@@ -463,13 +463,13 @@ const getLineDetails = async (req, res) => {
           _id: appointment._id,
           type: 'appointment',
           userId: appointment.user?.userId || 'Unknown',
-          name: appointment.user?.name || 'Anonymous',
-          phone: appointment.user?.phone,
+          customerName: appointment.user?.name || 'Anonymous',
+          customerPhone: appointment.user?.phone,
           appointmentTime: appointment.appointmentTime,
           endTime: appointment.endTime,
           duration: appointment.duration,
           status: appointment.status,
-          notes: appointment.notes || '', // Customer message/notes
+          customerMessage: appointment.notes || '', // Customer message/notes
           joinedAt: appointment.createdAt,
           formattedTime: appointment.appointmentTime.toLocaleTimeString('en-US', {
             hour: 'numeric',
