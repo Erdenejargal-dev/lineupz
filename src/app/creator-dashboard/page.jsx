@@ -1926,4 +1926,178 @@ const QueueManagementTab = ({ line }) => {
   );
 };
 
-;
+// Calendar Tab Component
+const CalendarTab = ({ token, user }) => {
+  const [loading, setLoading] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const connectGoogleCalendar = async () => {
+    try {
+      setConnecting(true);
+      setError('');
+      
+      const response = await fetch(`${API_BASE_URL}/google-calendar/auth-url`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        window.location.href = data.authUrl;
+      } else {
+        throw new Error(data.message || 'Failed to get authorization URL');
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const disconnectGoogleCalendar = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const response = await fetch(`${API_BASE_URL}/google-calendar/disconnect`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        const updatedUser = { ...user, googleCalendar: { connected: false } };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setSuccess('Google Calendar disconnected successfully');
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        throw new Error(data.message || 'Failed to disconnect');
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isConnected = user?.googleCalendar?.connected;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-900">Google Calendar Integration</h2>
+      </div>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+          {success}
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <h3 className="text-lg font-medium text-gray-900">
+              {isConnected ? 'Connected' : 'Not Connected'}
+            </h3>
+          </div>
+          
+          {isConnected && (
+            <span className="text-sm text-green-600 bg-green-100 px-3 py-1 rounded-full">
+              ✓ Active
+            </span>
+          )}
+        </div>
+
+        {isConnected ? (
+          <div className="space-y-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h4 className="font-medium text-green-900 mb-2">🎉 Google Calendar Connected!</h4>
+              <p className="text-sm text-green-800 mb-3">
+                Your Google Calendar is connected and ready to use. Online appointments will automatically:
+              </p>
+              <ul className="text-sm text-green-800 space-y-1 ml-4">
+                <li>• Create Google Meet links automatically</li>
+                <li>• Send calendar invites to customers</li>
+                <li>• Add events to your Google Calendar</li>
+                <li>• Include meeting details and customer info</li>
+              </ul>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div>
+                <p className="text-sm text-gray-600">
+                  Connected as: <span className="font-medium">{user?.email}</span>
+                </p>
+                <p className="text-xs text-gray-500">
+                  Last connected: {user?.googleCalendar?.connectedAt ? 
+                    new Date(user.googleCalendar.connectedAt).toLocaleDateString() : 
+                    'Recently'
+                  }
+                </p>
+              </div>
+              
+              <button
+                onClick={disconnectGoogleCalendar}
+                disabled={loading}
+                className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 disabled:opacity-50 transition-colors text-sm"
+              >
+                {loading ? 'Disconnecting...' : 'Disconnect'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 mb-2">📅 Connect Google Calendar</h4>
+              <p className="text-sm text-blue-800 mb-3">
+                Connect your Google Calendar to enable automatic Google Meet creation for online appointments.
+              </p>
+              <p className="text-sm text-blue-700">
+                <strong>Benefits:</strong>
+              </p>
+              <ul className="text-sm text-blue-700 space-y-1 ml-4 mb-4">
+                <li>• Automatic Google Meet links for online appointments</li>
+                <li>• Calendar invites sent to customers automatically</li>
+                <li>• Appointments sync to your Google Calendar</li>
+                <li>• Professional meeting experience</li>
+              </ul>
+            </div>
+
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <h4 className="font-medium text-orange-900 mb-2">⚠️ Required for Online Appointments</h4>
+              <p className="text-sm text-orange-800">
+                To create lines with online appointments, you must connect your Google Calendar first. 
+                This ensures customers receive proper meeting links and calendar invites.
+              </p>
+            </div>
+
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={connectGoogleCalendar}
+                disabled={connecting}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
+              >
+                {connecting ? 'Connecting...' : 'Connect Google Calendar'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CreatorDashboard;
