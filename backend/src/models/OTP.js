@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 const otpSchema = new mongoose.Schema({
   phone: {
     type: String,
-    required: true,
+    trim: true
+  },
+  email: {
+    type: String,
     trim: true
   },
   otp: {
@@ -12,7 +15,7 @@ const otpSchema = new mongoose.Schema({
   },
   purpose: {
     type: String,
-    enum: ['signup', 'login', 'phone_verification'],
+    enum: ['signup', 'login', 'phone_verification', 'email_verification'],
     default: 'signup'
   },
   isVerified: {
@@ -41,37 +44,52 @@ otpSchema.statics.generateOTP = function() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Create new OTP for phone number
-otpSchema.statics.createOTP = async function(phone, purpose = 'signup') {
-  console.log(`Creating OTP for: phone=${phone}, purpose=${purpose}`);
+// Create new OTP for phone number or email
+otpSchema.statics.createOTP = async function(identifier, purpose = 'signup') {
+  console.log(`Creating OTP for: identifier=${identifier}, purpose=${purpose}`);
   
-  // Delete any existing OTPs for this phone
-  await this.deleteMany({ phone });
-  console.log(`Deleted existing OTPs for ${phone}`);
+  // Determine if identifier is phone or email
+  const isEmail = identifier.includes('@');
+  const query = isEmail ? { email: identifier } : { phone: identifier };
+  
+  // Delete any existing OTPs for this identifier
+  await this.deleteMany(query);
+  console.log(`Deleted existing OTPs for ${identifier}`);
   
   const otp = this.generateOTP();
   console.log(`Generated OTP: ${otp}`);
   
-  const otpDoc = new this({
-    phone,
+  const otpData = {
     otp,
     purpose
-  });
+  };
+  
+  if (isEmail) {
+    otpData.email = identifier;
+  } else {
+    otpData.phone = identifier;
+  }
+  
+  const otpDoc = new this(otpData);
   
   await otpDoc.save();
-  console.log(`Saved OTP to database for ${phone}`);
+  console.log(`Saved OTP to database for ${identifier}`);
   return otp;
 };
 
-// Verify OTP
-otpSchema.statics.verifyOTP = async function(phone, otp, purpose = 'signup') {
+// Verify OTP for phone or email
+otpSchema.statics.verifyOTP = async function(identifier, otp, purpose = 'signup') {
   console.log('=== OTP VERIFICATION DEBUG ===');
-  console.log('Phone:', phone);
+  console.log('Identifier:', identifier);
   console.log('OTP:', otp);
   console.log('Purpose:', purpose);
   
+  // Determine if identifier is phone or email
+  const isEmail = identifier.includes('@');
+  const query = isEmail ? { email: identifier } : { phone: identifier };
+  
   const otpDoc = await this.findOne({ 
-    phone, 
+    ...query,
     purpose,
     isVerified: false,
     expiresAt: { $gt: new Date() }
@@ -87,14 +105,14 @@ otpSchema.statics.verifyOTP = async function(phone, otp, purpose = 'signup') {
     console.log('Current time:', new Date());
   } else {
     console.log('No OTP found with criteria:');
-    console.log('- Phone:', phone);
+    console.log('- Identifier:', identifier);
     console.log('- Purpose:', purpose);
     console.log('- isVerified: false');
     console.log('- Not expired');
     
-    // Check if there are any OTPs for this phone
-    const allOTPs = await this.find({ phone });
-    console.log('All OTPs for this phone:', allOTPs.length);
+    // Check if there are any OTPs for this identifier
+    const allOTPs = await this.find(query);
+    console.log('All OTPs for this identifier:', allOTPs.length);
     allOTPs.forEach((doc, index) => {
       console.log(`OTP ${index + 1}:`, {
         otp: doc.otp,
