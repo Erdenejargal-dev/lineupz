@@ -157,7 +157,7 @@ export default function PrivacyPolicy() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700 mb-2"><strong>Email:</strong> privacy@tabi.mn</p>
                 <p className="text-gray-700 mb-2"><strong>Website:</strong> https://tabi.mn</p>
-                <p className="text-gray-700"><strong>Address:</strong> [Your Business Address]</p>
+                <p className="text-gray-700"><strong>Address:</strong> Ulaanbaatar, Mongolia, Khanuul District 26th building 5th floor 12</p>
               </div>
             </section>
           </div>
