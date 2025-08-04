@@ -12,6 +12,16 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
     estimatedServiceTime: 5,
     codeType: 'stable',
     appointmentSettings: {
+      meetingType: 'in-person',
+      location: {
+        address: '',
+        instructions: ''
+      },
+      onlineSettings: {
+        platform: 'google-meet',
+        autoCreateMeeting: true,
+        meetingInstructions: ''
+      },
       duration: 30,
       slotInterval: 30,
       advanceBookingDays: 7,
@@ -303,6 +313,245 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
                 <Calendar className="h-5 w-5 text-blue-600" />
                 <h3 className="font-medium text-blue-900">Appointment Settings</h3>
               </div>
+
+              {/* Meeting Type Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Meeting Type *
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div
+                    className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
+                      formData.appointmentSettings.meetingType === 'in-person'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      appointmentSettings: {
+                        ...formData.appointmentSettings,
+                        meetingType: 'in-person'
+                      }
+                    })}
+                  >
+                    <div className="flex items-center mb-2">
+                      <input
+                        type="radio"
+                        name="meetingType"
+                        value="in-person"
+                        checked={formData.appointmentSettings.meetingType === 'in-person'}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          appointmentSettings: {
+                            ...formData.appointmentSettings,
+                            meetingType: e.target.value
+                          }
+                        })}
+                        className="mr-2"
+                      />
+                      <span className="font-medium text-gray-900">🏢 In-Person</span>
+                    </div>
+                    <p className="text-xs text-gray-600">Customers visit your location</p>
+                  </div>
+
+                  <div
+                    className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
+                      formData.appointmentSettings.meetingType === 'online'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      appointmentSettings: {
+                        ...formData.appointmentSettings,
+                        meetingType: 'online'
+                      }
+                    })}
+                  >
+                    <div className="flex items-center mb-2">
+                      <input
+                        type="radio"
+                        name="meetingType"
+                        value="online"
+                        checked={formData.appointmentSettings.meetingType === 'online'}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          appointmentSettings: {
+                            ...formData.appointmentSettings,
+                            meetingType: e.target.value
+                          }
+                        })}
+                        className="mr-2"
+                      />
+                      <span className="font-medium text-gray-900">💻 Online</span>
+                    </div>
+                    <p className="text-xs text-gray-600">Google Meet video calls</p>
+                  </div>
+
+                  <div
+                    className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
+                      formData.appointmentSettings.meetingType === 'both'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setFormData({
+                      ...formData,
+                      appointmentSettings: {
+                        ...formData.appointmentSettings,
+                        meetingType: 'both'
+                      }
+                    })}
+                  >
+                    <div className="flex items-center mb-2">
+                      <input
+                        type="radio"
+                        name="meetingType"
+                        value="both"
+                        checked={formData.appointmentSettings.meetingType === 'both'}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          appointmentSettings: {
+                            ...formData.appointmentSettings,
+                            meetingType: e.target.value
+                          }
+                        })}
+                        className="mr-2"
+                      />
+                      <span className="font-medium text-gray-900">🔄 Both Options</span>
+                    </div>
+                    <p className="text-xs text-gray-600">Let customers choose</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Settings for In-Person */}
+              {(formData.appointmentSettings.meetingType === 'in-person' || formData.appointmentSettings.meetingType === 'both') && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <h4 className="font-medium text-green-900 mb-3">📍 Location Details</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Business Address
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.appointmentSettings.location?.address || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          appointmentSettings: {
+                            ...formData.appointmentSettings,
+                            location: {
+                              ...formData.appointmentSettings.location,
+                              address: e.target.value
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="123 Business Street, City, State 12345"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Special Instructions
+                      </label>
+                      <textarea
+                        value={formData.appointmentSettings.location?.instructions || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          appointmentSettings: {
+                            ...formData.appointmentSettings,
+                            location: {
+                              ...formData.appointmentSettings.location,
+                              instructions: e.target.value
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows="2"
+                        placeholder="Enter through main entrance, take elevator to 2nd floor, Suite 201"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Online Meeting Settings */}
+              {(formData.appointmentSettings.meetingType === 'online' || formData.appointmentSettings.meetingType === 'both') && (
+                <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                  <h4 className="font-medium text-purple-900 mb-3">💻 Online Meeting Settings</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Meeting Platform
+                      </label>
+                      <select
+                        value={formData.appointmentSettings.onlineSettings?.platform || 'google-meet'}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          appointmentSettings: {
+                            ...formData.appointmentSettings,
+                            onlineSettings: {
+                              ...formData.appointmentSettings.onlineSettings,
+                              platform: e.target.value
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="google-meet">Google Meet (Recommended)</option>
+                        <option value="zoom">Zoom</option>
+                        <option value="teams">Microsoft Teams</option>
+                        <option value="custom">Custom Platform</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.appointmentSettings.onlineSettings?.autoCreateMeeting !== false}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            appointmentSettings: {
+                              ...formData.appointmentSettings,
+                              onlineSettings: {
+                                ...formData.appointmentSettings.onlineSettings,
+                                autoCreateMeeting: e.target.checked
+                              }
+                            }
+                          })}
+                          className="mr-2"
+                        />
+                        <span className="text-sm text-gray-700">Automatically create meeting links</span>
+                      </label>
+                      <p className="text-xs text-gray-500 ml-6">Google Meet links will be created automatically and sent to both parties</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Meeting Instructions
+                      </label>
+                      <textarea
+                        value={formData.appointmentSettings.onlineSettings?.meetingInstructions || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          appointmentSettings: {
+                            ...formData.appointmentSettings,
+                            onlineSettings: {
+                              ...formData.appointmentSettings.onlineSettings,
+                              meetingInstructions: e.target.value
+                            }
+                          }
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows="2"
+                        placeholder="Please ensure you have a stable internet connection and test your camera/microphone beforehand"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

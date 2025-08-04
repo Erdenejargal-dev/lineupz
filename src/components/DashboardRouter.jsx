@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Users, Clock, QrCode, LogOut, Plus, Calendar, X } from 'lucide-react';
-import OnboardingFlow from './OnboardingFlow';
+import SimpleOnboardingFlow from './SimpleOnboardingFlow';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
@@ -236,9 +236,13 @@ const CustomerDashboardViewEnhanced = ({ showCreatorOption = false }) => {
 
   // Show onboarding flow if needed
   if (showOnboarding && user) {
+    // Determine user type based on whether they're trying to create lines
+    const userType = user.isCreator || showCreatorOption ? 'creator' : 'customer';
+    
     return (
-      <OnboardingFlow
+      <SimpleOnboardingFlow
         user={user}
+        userType={userType}
         onComplete={handleOnboardingComplete}
         onSkip={handleOnboardingSkip}
       />
