@@ -302,19 +302,7 @@ const MyAppointments = ({ token }) => {
         </div>
       )}
 
-      {appointments.length === 0 ? (
-        <div className="text-center py-12">
-          <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h4 className="text-lg font-medium text-gray-900 mb-2">No upcoming appointments</h4>
-          <p className="text-gray-600 mb-6">You don't have any scheduled appointments yet.</p>
-          <button
-            onClick={() => window.location.href = '/join'}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Book Your First Appointment
-          </button>
-        </div>
-      ) : (
+      {appointments.length > 0 && (
         <div className="space-y-4">
           {appointments.map((appointment) => (
             <AppointmentCard key={appointment._id} appointment={appointment} />
@@ -624,10 +612,10 @@ export default function DashboardPage() {
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <button
             onClick={() => window.location.href = '/join'}
-            className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 hover:bg-gray-50 transition-colors text-center"
+            className="md:col-span-3 bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 hover:bg-gray-50 transition-colors text-center"
           >
             <QrCode className="h-8 w-8 text-gray-400 mx-auto mb-3" />
             <h3 className="font-medium text-gray-900 mb-1">Join a Line</h3>
@@ -636,7 +624,7 @@ export default function DashboardPage() {
 
           <button
             onClick={() => window.location.href = '/creator-dashboard'}
-            className="bg-white border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-colors text-center"
+            className="md:col-span-2 bg-white border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-colors text-center"
           >
             <Users className="h-8 w-8 text-blue-600 mx-auto mb-3" />
             <h3 className="font-medium text-gray-900 mb-1">Create Lines</h3>
