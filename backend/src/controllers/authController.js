@@ -442,8 +442,20 @@ const sendEmailVerification = async (req, res) => {
     // Generate verification OTP for email
     const otp = await OTP.createOTP(user.email, 'email_verification');
 
-    // TODO: Send email with OTP (implement email service)
-    console.log(`Email verification OTP for ${user.email}: ${otp}`);
+    // Send email with OTP
+    try {
+      const emailService = require('../services/emailService');
+      const emailResult = await emailService.sendVerificationEmail(user.email, otp);
+      
+      if (emailResult.success) {
+        console.log(`Email verification sent to ${user.email}`);
+      } else {
+        console.log(`Email service fallback for ${user.email}: ${otp}`);
+      }
+    } catch (emailError) {
+      console.error('Email service error:', emailError);
+      console.log(`Email service failed, OTP for ${user.email}: ${otp}`);
+    }
 
     res.json({
       success: true,
