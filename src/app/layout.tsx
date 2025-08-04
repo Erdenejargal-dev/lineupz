@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/themes/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import Header from "@/components/header";
+import Footer from "@/components/Footer";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 const geistSans = Geist({
@@ -41,6 +42,7 @@ export default function RootLayout({
             <Header />
             <Toaster position="bottom-center" />
             {children}
+            <Footer />
           </ThemeProvider>
         </ErrorBoundary>
       </body>
