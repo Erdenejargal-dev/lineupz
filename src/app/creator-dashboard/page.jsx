@@ -185,6 +185,7 @@ const CreatorDashboard = () => {
             {[
               { id: 'overview', name: 'Overview', icon: BarChart3 },
               { id: 'lines', name: 'My Lines', icon: QrCode },
+              { id: 'calendar', name: 'Calendar', icon: Calendar },
               { id: 'analytics', name: 'Analytics', icon: TrendingUp },
             ].map((tab) => {
               const Icon = tab.icon;
@@ -226,6 +227,10 @@ const CreatorDashboard = () => {
             refreshing={refreshing}
             loadDashboardData={loadDashboardData}
           />
+        )}
+
+        {activeTab === 'calendar' && (
+          <CalendarTab token={token} user={user} />
         )}
 
         {activeTab === 'analytics' && (
@@ -1921,4 +1926,4 @@ const QueueManagementTab = ({ line }) => {
   );
 };
 
-export default CreatorDashboard;
+;
