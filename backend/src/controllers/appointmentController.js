@@ -305,7 +305,11 @@ const getAvailableSlots = async (req, res) => {
 // Book an appointment
 const bookAppointment = async (req, res) => {
   try {
-    const { lineCode, appointmentTime, notes } = req.body;
+    console.log('=== BOOK APPOINTMENT REQUEST ===');
+    console.log('Request body:', req.body);
+    console.log('User ID:', req.userId);
+    
+    const { lineCode, appointmentTime, notes, meetingType } = req.body;
     
     if (!lineCode || !appointmentTime) {
       return res.status(400).json({
@@ -322,6 +326,8 @@ const bookAppointment = async (req, res) => {
       });
     }
     
+    console.log('Found line:', line.title, 'Service type:', line.serviceType);
+    
     if (line.serviceType === 'queue') {
       return res.status(400).json({
         success: false,
@@ -332,6 +338,10 @@ const bookAppointment = async (req, res) => {
     const startTime = new Date(appointmentTime);
     const duration = line.appointmentSettings?.duration || 30;
     const endTime = new Date(startTime.getTime() + duration * 60000);
+    
+    console.log('Appointment time:', startTime.toISOString());
+    console.log('Duration:', duration, 'minutes');
+    console.log('End time:', endTime.toISOString());
     
     // Check if user already has an appointment for this line
     const existingAppointment = await Appointment.findOne({
@@ -388,16 +398,54 @@ const bookAppointment = async (req, res) => {
       });
     }
     
-    // Create appointment
-    const appointment = new Appointment({
+    // Determine meeting type
+    let finalMeetingType = meetingType;
+    if (!finalMeetingType) {
+      // Default based on line settings
+      const lineMeetingType = line.appointmentSettings?.meetingType || 'in-person';
+      if (lineMeetingType === 'both') {
+        finalMeetingType = 'in-person'; // Default to in-person if both options available
+      } else {
+        finalMeetingType = lineMeetingType;
+      }
+    }
+    
+    console.log('Meeting type:', finalMeetingType);
+    
+    // Prepare appointment data
+    const appointmentData = {
       line: line._id,
       user: req.userId,
       appointmentTime: startTime,
       endTime: endTime,
       duration: duration,
       status: line.appointmentSettings?.autoConfirm ? 'confirmed' : 'pending',
-      notes: notes || ''
-    });
+      notes: notes || '',
+      meetingType: finalMeetingType
+    };
+    
+    // Add location details for in-person meetings
+    if (finalMeetingType === 'in-person') {
+      appointmentData.location = {
+        address: line.appointmentSettings?.location?.address || '',
+        instructions: line.appointmentSettings?.location?.instructions || ''
+      };
+    }
+    
+    // Add online meeting details for online meetings
+    if (finalMeetingType === 'online') {
+      appointmentData.onlineMeeting = {
+        platform: line.appointmentSettings?.onlineSettings?.platform || 'google-meet',
+        meetingUrl: '', // Will be populated by Google Meet service
+        meetingId: '',
+        instructions: line.appointmentSettings?.onlineSettings?.meetingInstructions || ''
+      };
+    }
+    
+    console.log('Creating appointment with data:', appointmentData);
+    
+    // Create appointment
+    const appointment = new Appointment(appointmentData);
     
     await appointment.save();
     await appointment.populate(['line', 'user']);
