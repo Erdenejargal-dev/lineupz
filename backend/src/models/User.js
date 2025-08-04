@@ -29,12 +29,166 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  // Enhanced profile fields
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email address']
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  
   // Creator-specific fields
   businessName: String,
   businessDescription: String,
+  businessAddress: String,
+  businessWebsite: String,
+  businessCategory: String,
   isCreator: {
     type: Boolean,
     default: false
+  },
+  
+  // Service customization defaults
+  defaultServiceSettings: {
+    appointmentDuration: {
+      type: Number,
+      default: 30,
+      min: 15,
+      max: 480
+    },
+    slotInterval: {
+      type: Number,
+      default: 30,
+      enum: [15, 30, 60]
+    },
+    advanceBookingDays: {
+      type: Number,
+      default: 7,
+      min: 1,
+      max: 90
+    },
+    cancellationHours: {
+      type: Number,
+      default: 2,
+      min: 0,
+      max: 72
+    },
+    autoConfirmAppointments: {
+      type: Boolean,
+      default: true
+    },
+    pricing: {
+      enabled: {
+        type: Boolean,
+        default: false
+      },
+      currency: {
+        type: String,
+        default: 'USD'
+      },
+      defaultPrice: {
+        type: Number,
+        default: 0,
+        min: 0
+      }
+    }
+  },
+  
+  // Notification preferences
+  notificationPreferences: {
+    email: {
+      enabled: {
+        type: Boolean,
+        default: true
+      },
+      appointmentConfirmations: {
+        type: Boolean,
+        default: true
+      },
+      appointmentReminders: {
+        type: Boolean,
+        default: true
+      },
+      appointmentCancellations: {
+        type: Boolean,
+        default: true
+      },
+      queueUpdates: {
+        type: Boolean,
+        default: false
+      }
+    },
+    sms: {
+      enabled: {
+        type: Boolean,
+        default: true
+      },
+      appointmentConfirmations: {
+        type: Boolean,
+        default: true
+      },
+      appointmentReminders: {
+        type: Boolean,
+        default: true
+      },
+      appointmentCancellations: {
+        type: Boolean,
+        default: true
+      },
+      queueUpdates: {
+        type: Boolean,
+        default: true
+      }
+    }
+  },
+  
+  // Google Calendar integration
+  googleCalendar: {
+    connected: {
+      type: Boolean,
+      default: false
+    },
+    accessToken: String,
+    refreshToken: String,
+    calendarId: String,
+    syncEnabled: {
+      type: Boolean,
+      default: false
+    },
+    lastSyncAt: Date,
+    connectedAt: Date
+  },
+  
+  // Onboarding progress
+  onboardingCompleted: {
+    type: Boolean,
+    default: false
+  },
+  onboardingSteps: {
+    profileSetup: {
+      type: Boolean,
+      default: false
+    },
+    businessInfo: {
+      type: Boolean,
+      default: false
+    },
+    serviceSettings: {
+      type: Boolean,
+      default: false
+    },
+    notificationPrefs: {
+      type: Boolean,
+      default: false
+    },
+    calendarConnection: {
+      type: Boolean,
+      default: false
+    }
   },
   // Stats
   totalLinesCreated: {

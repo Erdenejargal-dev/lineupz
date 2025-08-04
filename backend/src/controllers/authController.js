@@ -190,7 +190,15 @@ const getMe = async (req, res) => {
 // Update user profile
 const updateProfile = async (req, res) => {
   try {
-    const { name, businessName, businessDescription } = req.body;
+    const { 
+      name, 
+      email,
+      businessName, 
+      businessDescription,
+      businessAddress,
+      businessWebsite,
+      businessCategory
+    } = req.body;
     
     const user = await User.findById(req.userId);
     
@@ -201,13 +209,51 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    // Update fields if provided
-    if (name !== undefined) user.name = name;
+    // Update basic profile fields
+    if (name !== undefined) {
+      user.name = name;
+      user.onboardingSteps.profileSetup = true;
+    }
+    
+    if (email !== undefined) {
+      user.email = email;
+      user.isEmailVerified = false; // Reset email verification when email changes
+      user.onboardingSteps.profileSetup = true;
+    }
+
+    // Update business fields
     if (businessName !== undefined) {
       user.businessName = businessName;
       user.isCreator = true; // Mark as creator if they set business info
+      user.onboardingSteps.businessInfo = true;
     }
-    if (businessDescription !== undefined) user.businessDescription = businessDescription;
+    
+    if (businessDescription !== undefined) {
+      user.businessDescription = businessDescription;
+      user.onboardingSteps.businessInfo = true;
+    }
+    
+    if (businessAddress !== undefined) {
+      user.businessAddress = businessAddress;
+      user.onboardingSteps.businessInfo = true;
+    }
+    
+    if (businessWebsite !== undefined) {
+      user.businessWebsite = businessWebsite;
+      user.onboardingSteps.businessInfo = true;
+    }
+    
+    if (businessCategory !== undefined) {
+      user.businessCategory = businessCategory;
+      user.onboardingSteps.businessInfo = true;
+    }
+
+    // Check if onboarding is completed
+    const steps = user.onboardingSteps;
+    user.onboardingCompleted = steps.profileSetup && 
+                               (steps.businessInfo || !user.isCreator) &&
+                               steps.serviceSettings &&
+                               steps.notificationPrefs;
 
     await user.save();
 
@@ -222,6 +268,245 @@ const updateProfile = async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Failed to update profile' 
+    });
+  }
+};
+
+// Update service settings
+const updateServiceSettings = async (req, res) => {
+  try {
+    const { 
+      appointmentDuration,
+      slotInterval,
+      advanceBookingDays,
+      cancellationHours,
+      autoConfirmAppointments,
+      pricing
+    } = req.body;
+    
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    // Initialize defaultServiceSettings if it doesn't exist
+    if (!user.defaultServiceSettings) {
+      user.defaultServiceSettings = {};
+    }
+
+    // Update service settings
+    if (appointmentDuration !== undefined) {
+      user.defaultServiceSettings.appointmentDuration = appointmentDuration;
+    }
+    if (slotInterval !== undefined) {
+      user.defaultServiceSettings.slotInterval = slotInterval;
+    }
+    if (advanceBookingDays !== undefined) {
+      user.defaultServiceSettings.advanceBookingDays = advanceBookingDays;
+    }
+    if (cancellationHours !== undefined) {
+      user.defaultServiceSettings.cancellationHours = cancellationHours;
+    }
+    if (autoConfirmAppointments !== undefined) {
+      user.defaultServiceSettings.autoConfirmAppointments = autoConfirmAppointments;
+    }
+    if (pricing !== undefined) {
+      user.defaultServiceSettings.pricing = {
+        ...user.defaultServiceSettings.pricing,
+        ...pricing
+      };
+    }
+
+    // Mark service settings step as completed
+    user.onboardingSteps.serviceSettings = true;
+
+    // Check if onboarding is completed
+    const steps = user.onboardingSteps;
+    user.onboardingCompleted = steps.profileSetup && 
+                               (steps.businessInfo || !user.isCreator) &&
+                               steps.serviceSettings &&
+                               steps.notificationPrefs;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Service settings updated successfully',
+      user: user.toJSON()
+    });
+
+  } catch (error) {
+    console.error('Update service settings error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to update service settings' 
+    });
+  }
+};
+
+// Update notification preferences
+const updateNotificationPreferences = async (req, res) => {
+  try {
+    const { email, sms } = req.body;
+    
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    // Initialize notificationPreferences if it doesn't exist
+    if (!user.notificationPreferences) {
+      user.notificationPreferences = {
+        email: {},
+        sms: {}
+      };
+    }
+
+    // Update email preferences
+    if (email !== undefined) {
+      user.notificationPreferences.email = {
+        ...user.notificationPreferences.email,
+        ...email
+      };
+    }
+
+    // Update SMS preferences
+    if (sms !== undefined) {
+      user.notificationPreferences.sms = {
+        ...user.notificationPreferences.sms,
+        ...sms
+      };
+    }
+
+    // Mark notification preferences step as completed
+    user.onboardingSteps.notificationPrefs = true;
+
+    // Check if onboarding is completed
+    const steps = user.onboardingSteps;
+    user.onboardingCompleted = steps.profileSetup && 
+                               (steps.businessInfo || !user.isCreator) &&
+                               steps.serviceSettings &&
+                               steps.notificationPrefs;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Notification preferences updated successfully',
+      user: user.toJSON()
+    });
+
+  } catch (error) {
+    console.error('Update notification preferences error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to update notification preferences' 
+    });
+  }
+};
+
+// Send email verification
+const sendEmailVerification = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    if (!user.email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No email address found' 
+      });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Email is already verified' 
+      });
+    }
+
+    // Generate verification OTP for email
+    const otp = await OTP.createOTP(user.email, 'email_verification');
+
+    // TODO: Send email with OTP (implement email service)
+    console.log(`Email verification OTP for ${user.email}: ${otp}`);
+
+    res.json({
+      success: true,
+      message: 'Verification email sent',
+      // In development, return OTP (REMOVE IN PRODUCTION!)
+      ...(process.env.NODE_ENV === 'development' && { otp })
+    });
+
+  } catch (error) {
+    console.error('Send email verification error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send verification email' 
+    });
+  }
+};
+
+// Verify email with OTP
+const verifyEmail = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    
+    const user = await User.findById(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    if (!user.email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No email address found' 
+      });
+    }
+
+    // Verify OTP
+    const otpResult = await OTP.verifyOTP(user.email, otp, 'email_verification');
+    
+    if (!otpResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: otpResult.message
+      });
+    }
+
+    // Mark email as verified
+    user.isEmailVerified = true;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully',
+      user: user.toJSON()
+    });
+
+  } catch (error) {
+    console.error('Verify email error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to verify email' 
     });
   }
 };
@@ -260,5 +545,9 @@ module.exports = {
   verifyOTP,
   getMe,
   updateProfile,
+  updateServiceSettings,
+  updateNotificationPreferences,
+  sendEmailVerification,
+  verifyEmail,
   refreshToken
 };

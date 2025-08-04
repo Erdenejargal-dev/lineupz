@@ -14,6 +14,16 @@ try {
   notifyAppointmentUpdate = null;
 }
 
+// Make Google Calendar import optional to prevent errors
+let syncAppointmentToCalendar;
+try {
+  const googleCalendarController = require('./googleCalendarController');
+  syncAppointmentToCalendar = googleCalendarController.syncAppointmentToCalendar;
+} catch (error) {
+  console.log('Google Calendar controller not available, calendar sync disabled');
+  syncAppointmentToCalendar = null;
+}
+
 // Get available slots for a line on a specific date
 const getAvailableSlots = async (req, res) => {
   try {
@@ -391,6 +401,34 @@ const bookAppointment = async (req, res) => {
     
     await appointment.save();
     await appointment.populate(['line', 'user']);
+    
+    // Sync to Google Calendar if enabled
+    if (syncAppointmentToCalendar) {
+      try {
+        // Get line creator for calendar sync
+        const User = require('../models/User');
+        const lineCreator = await User.findById(line.creator);
+        
+        if (lineCreator && lineCreator.googleCalendar?.connected && lineCreator.googleCalendar?.syncEnabled) {
+          console.log('Syncing appointment to Google Calendar...');
+          const syncResult = await syncAppointmentToCalendar(appointment, lineCreator);
+          
+          if (syncResult.success) {
+            console.log('Appointment synced to Google Calendar successfully');
+            // Optionally store the Google Calendar event ID
+            appointment.googleCalendarEventId = syncResult.eventId;
+            await appointment.save();
+          } else {
+            console.error('Failed to sync appointment to Google Calendar:', syncResult.message);
+          }
+        }
+      } catch (calendarError) {
+        console.error('Google Calendar sync error:', calendarError);
+        // Don't fail the request if calendar sync fails
+      }
+    } else {
+      console.log('Google Calendar sync disabled - syncAppointmentToCalendar not available');
+    }
     
     // Send SMS notification for appointment confirmation
     if (notifyAppointmentUpdate) {
