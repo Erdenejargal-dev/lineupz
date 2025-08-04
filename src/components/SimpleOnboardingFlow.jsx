@@ -336,22 +336,32 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
                             Development: Your code is {emailOtp}
                           </p>
                         )}
-                        <input
-                          type="text"
-                          placeholder="Enter verification code"
-                          className="w-full px-2 py-1 border border-yellow-300 rounded text-sm"
-                          onKeyPress={async (e) => {
-                            if (e.key === 'Enter' && e.target.value) {
-                              const verified = await verifyEmail(e.target.value);
-                              if (verified) {
-                                // Refresh user data
-                                const updatedUser = JSON.parse(localStorage.getItem('user') || '{}');
-                                // Force re-render by updating user prop reference
-                                window.location.reload();
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Enter verification code"
+                            className="flex-1 px-2 py-1 border border-yellow-300 rounded text-sm"
+                            id="verification-code"
+                          />
+                          <button
+                            onClick={async () => {
+                              const input = document.getElementById('verification-code');
+                              if (input.value) {
+                                const verified = await verifyEmail(input.value);
+                                if (verified) {
+                                  // Refresh user data
+                                  const updatedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                                  // Force re-render by updating user prop reference
+                                  window.location.reload();
+                                }
                               }
-                            }
-                          }}
-                        />
+                            }}
+                            disabled={loading}
+                            className="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700 disabled:opacity-50"
+                          >
+                            {loading ? 'Verifying...' : 'Verify'}
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -446,8 +456,15 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
   const Icon = currentStepData.icon;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onSkip();
+        }
+      }}
+    >
+      <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">

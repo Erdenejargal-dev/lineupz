@@ -87,7 +87,11 @@ const Header: React.FC<HeaderProps> = ({ onLogin }) => {
                 </Link>
                 
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <button
+                    onClick={() => window.location.href = '/profile'}
+                    className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 px-2 py-1 rounded-lg transition-colors"
+                    title="Edit Profile"
+                  >
                     <User className="h-4 w-4" />
                     <span className="hidden lg:inline">
                       {user.name || `User ${user.userId}`}
@@ -95,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({ onLogin }) => {
                     <span className="lg:hidden">
                       {user.userId}
                     </span>
-                  </div>
+                  </button>
                   
                   <Link
                     href="/dashboard"
