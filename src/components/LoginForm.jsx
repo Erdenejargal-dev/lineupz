@@ -1,10 +1,11 @@
 'use client'
 import React, { useState } from 'react';
+import OnboardingFlow from './OnboardingFlow';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
 const LoginForm = () => {
-  const [step, setStep] = useState('phone'); // 'phone' or 'otp'
+  const [step, setStep] = useState('phone'); // 'phone', 'otp', or 'onboarding'
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
@@ -12,6 +13,7 @@ const LoginForm = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [isSignup, setIsSignup] = useState(false);
+  const [user, setUser] = useState(null);
 
   const sendOTP = async () => {
     setLoading(true);
@@ -70,8 +72,14 @@ const LoginForm = () => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Redirect to dashboard - using window.location since we can't use Next.js router in artifacts
-      window.location.href = '/dashboard';
+      // Check if user needs onboarding
+      if (data.isNewUser || !data.user.onboardingCompleted) {
+        setUser(data.user);
+        setStep('onboarding');
+      } else {
+        // Redirect to dashboard for existing users who completed onboarding
+        window.location.href = '/dashboard';
+      }
     } catch (error) {
       setError(error.message);
     } finally {
@@ -88,6 +96,27 @@ const LoginForm = () => {
     setMessage('');
     setIsSignup(false);
   };
+
+  const handleOnboardingComplete = () => {
+    // Redirect to dashboard after onboarding completion
+    window.location.href = '/dashboard';
+  };
+
+  const handleOnboardingSkip = () => {
+    // Allow users to skip onboarding and go to dashboard
+    window.location.href = '/dashboard';
+  };
+
+  // Show onboarding flow if user needs it
+  if (step === 'onboarding' && user) {
+    return (
+      <OnboardingFlow
+        user={user}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

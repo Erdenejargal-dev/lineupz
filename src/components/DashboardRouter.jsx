@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Users, Clock, QrCode, LogOut, Plus, Calendar, X } from 'lucide-react';
+import OnboardingFlow from './OnboardingFlow';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
@@ -194,6 +195,7 @@ const CustomerDashboardViewEnhanced = ({ showCreatorOption = false }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState(null);
   const [isClient, setIsClient] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -202,14 +204,46 @@ const CustomerDashboardViewEnhanced = ({ showCreatorOption = false }) => {
     setToken(savedToken);
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        
+        // Check if user needs onboarding
+        if (!parsedUser.onboardingCompleted) {
+          setShowOnboarding(true);
+        }
       } catch (e) {
         console.error('Error parsing user:', e);
       }
     }
   }, []);
 
-  // ... (keep your existing API calls and useEffects)
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    // Refresh user data from localStorage (updated by onboarding flow)
+    const updatedUser = localStorage.getItem('user');
+    if (updatedUser) {
+      try {
+        setUser(JSON.parse(updatedUser));
+      } catch (e) {
+        console.error('Error parsing updated user:', e);
+      }
+    }
+  };
+
+  const handleOnboardingSkip = () => {
+    setShowOnboarding(false);
+  };
+
+  // Show onboarding flow if needed
+  if (showOnboarding && user) {
+    return (
+      <OnboardingFlow
+        user={user}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -222,15 +256,50 @@ const CustomerDashboardViewEnhanced = ({ showCreatorOption = false }) => {
               Welcome back, {user?.name || 'there'}! 
               {showCreatorOption && <span className="text-blue-600"> (Creator Account)</span>}
             </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              title="Refresh"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              {user && !user.onboardingCompleted && (
+                <button
+                  onClick={() => setShowOnboarding(true)}
+                  className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                >
+                  Complete Setup
+                </button>
+              )}
+              <button 
+                onClick={() => window.location.reload()}
+                className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                title="Refresh"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Onboarding Reminder Banner */}
+        {user && !user.onboardingCompleted && !showOnboarding && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-100 rounded-full p-2">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-blue-900">Complete Your Profile Setup</h3>
+                  <p className="text-sm text-blue-700">
+                    Set up your business profile, service settings, and connect Google Calendar for the best experience.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowOnboarding(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
+              >
+                Get Started
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
