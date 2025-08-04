@@ -154,7 +154,35 @@ const OnboardingFlow = ({ user, onComplete, onSkip }) => {
   const sendEmailVerification = async () => {
     try {
       setLoading(true);
+      setError('');
+      
+      // First, save the email to the user's profile
       const token = localStorage.getItem('token');
+      const profileResponse = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email
+        })
+      });
+
+      if (!profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        setError(profileData.message || 'Failed to save email');
+        return;
+      }
+
+      // Update localStorage with new user data
+      const profileData = await profileResponse.json();
+      if (profileData.user) {
+        localStorage.setItem('user', JSON.stringify(profileData.user));
+      }
+
+      // Now send email verification
       const response = await fetch(`${API_BASE_URL}/auth/send-email-verification`, {
         method: 'POST',
         headers: {
