@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, Info, Clock, Users, Calendar, Settings } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Info, Clock, Users, Calendar, Settings, AlertTriangle } from 'lucide-react';
 
 const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
+  const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -41,6 +42,18 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
 
   const [errors, setErrors] = useState({});
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Load user data on component mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error('Error parsing user:', e);
+      }
+    }
+  }, []);
 
   const dayNames = {
     monday: 'Monday',
@@ -479,6 +492,28 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
               {(formData.appointmentSettings.meetingType === 'online' || formData.appointmentSettings.meetingType === 'both') && (
                 <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
                   <h4 className="font-medium text-purple-900 mb-3">💻 Online Meeting Settings</h4>
+                  
+                  {/* Google Calendar Connection Warning */}
+                  {user && !user.googleCalendar?.connected && (
+                    <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                        <div className="text-sm">
+                          <p className="font-medium text-orange-900 mb-1">Google Calendar Required</p>
+                          <p className="text-orange-800 mb-2">
+                            To create online appointments with automatic Google Meet links, you need to connect your Google Calendar first.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => window.location.href = '/creator-dashboard?tab=calendar'}
+                            className="text-orange-700 hover:text-orange-900 underline text-sm font-medium"
+                          >
+                            Connect Google Calendar →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">

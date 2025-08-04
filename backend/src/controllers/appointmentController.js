@@ -450,6 +450,48 @@ const bookAppointment = async (req, res) => {
     await appointment.save();
     await appointment.populate(['line', 'user']);
     
+    // Create Google Meet link for online appointments
+    if (finalMeetingType === 'online') {
+      try {
+        const googleMeetService = require('../services/googleMeetService');
+        const User = require('../models/User');
+        const lineCreator = await User.findById(line.creator);
+        
+        if (lineCreator && lineCreator.googleCalendar?.connected) {
+          console.log('Creating Google Meet for online appointment...');
+          const meetResult = await googleMeetService.createMeeting(
+            {
+              _id: appointment._id,
+              appointmentTime: appointment.appointmentTime,
+              endTime: appointment.endTime,
+              title: line.title,
+              notes: appointment.notes
+            },
+            {
+              accessToken: lineCreator.googleCalendar.accessToken,
+              refreshToken: lineCreator.googleCalendar.refreshToken
+            },
+            appointment.user.email
+          );
+          
+          if (meetResult.success) {
+            console.log('Google Meet created successfully:', meetResult.meetingUrl);
+            appointment.onlineMeeting.meetingUrl = meetResult.meetingUrl;
+            appointment.onlineMeeting.meetingId = meetResult.conferenceId;
+            appointment.googleCalendarEventId = meetResult.eventId;
+            await appointment.save();
+          } else {
+            console.error('Failed to create Google Meet:', meetResult.error);
+          }
+        } else {
+          console.log('Creator does not have Google Calendar connected, skipping Google Meet creation');
+        }
+      } catch (meetError) {
+        console.error('Google Meet creation error:', meetError);
+        // Don't fail the appointment if Google Meet fails
+      }
+    }
+    
     // Send email notifications to both creator and customer
     try {
       const User = require('../models/User');
@@ -679,7 +721,11 @@ const getMyAppointments = async (req, res) => {
         duration: appointment.duration,
         status: appointment.status,
         notes: appointment.notes,
+        meetingType: appointment.meetingType,
+        location: appointment.location,
+        onlineMeeting: appointment.onlineMeeting,
         canCancel: appointment.canBeCancelled(),
+        createdAt: appointment.createdAt,
         line: appointment.line
       }))
     });
