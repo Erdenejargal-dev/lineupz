@@ -78,13 +78,29 @@ export default function ProfilePage() {
       setError('');
       setSuccess('');
 
+      // Only send fields that are relevant to the user's current state
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone
+      };
+
+      // Only include business fields if user is a creator
+      if (user?.isCreator) {
+        payload.businessName = formData.businessName;
+        payload.businessDescription = formData.businessDescription;
+        payload.businessAddress = formData.businessAddress;
+        payload.businessWebsite = formData.businessWebsite;
+        payload.businessCategory = formData.businessCategory;
+      }
+
       const response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();

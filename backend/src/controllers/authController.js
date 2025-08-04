@@ -193,11 +193,14 @@ const updateProfile = async (req, res) => {
     const { 
       name, 
       email,
+      phone,
       businessName, 
       businessDescription,
       businessAddress,
       businessWebsite,
-      businessCategory
+      businessCategory,
+      isCreator,
+      onboardingCompleted
     } = req.body;
     
     const user = await User.findById(req.userId);
@@ -217,43 +220,64 @@ const updateProfile = async (req, res) => {
     
     if (email !== undefined) {
       user.email = email;
-      user.isEmailVerified = false; // Reset email verification when email changes
+      // Only reset email verification if email actually changed
+      if (user.email !== email) {
+        user.isEmailVerified = false;
+      }
       user.onboardingSteps.profileSetup = true;
     }
 
-    // Update business fields
-    if (businessName !== undefined) {
-      user.businessName = businessName;
-      user.isCreator = true; // Mark as creator if they set business info
-      user.onboardingSteps.businessInfo = true;
-    }
-    
-    if (businessDescription !== undefined) {
-      user.businessDescription = businessDescription;
-      user.onboardingSteps.businessInfo = true;
-    }
-    
-    if (businessAddress !== undefined) {
-      user.businessAddress = businessAddress;
-      user.onboardingSteps.businessInfo = true;
-    }
-    
-    if (businessWebsite !== undefined) {
-      user.businessWebsite = businessWebsite;
-      user.onboardingSteps.businessInfo = true;
-    }
-    
-    if (businessCategory !== undefined) {
-      user.businessCategory = businessCategory;
-      user.onboardingSteps.businessInfo = true;
+    if (phone !== undefined) {
+      user.phone = phone;
     }
 
-    // Check if onboarding is completed
-    const steps = user.onboardingSteps;
-    user.onboardingCompleted = steps.profileSetup && 
-                               (steps.businessInfo || !user.isCreator) &&
-                               steps.serviceSettings &&
-                               steps.notificationPrefs;
+    // Handle isCreator flag explicitly
+    if (isCreator !== undefined) {
+      user.isCreator = isCreator;
+      if (isCreator) {
+        user.onboardingSteps.businessInfo = true;
+      }
+    }
+
+    // Update business fields (only if user is or becomes a creator)
+    if (user.isCreator || isCreator) {
+      if (businessName !== undefined) {
+        user.businessName = businessName;
+        user.onboardingSteps.businessInfo = true;
+      }
+      
+      if (businessDescription !== undefined) {
+        user.businessDescription = businessDescription;
+        user.onboardingSteps.businessInfo = true;
+      }
+      
+      if (businessAddress !== undefined) {
+        user.businessAddress = businessAddress;
+        user.onboardingSteps.businessInfo = true;
+      }
+      
+      if (businessWebsite !== undefined) {
+        user.businessWebsite = businessWebsite;
+        user.onboardingSteps.businessInfo = true;
+      }
+      
+      if (businessCategory !== undefined) {
+        user.businessCategory = businessCategory;
+        user.onboardingSteps.businessInfo = true;
+      }
+    }
+
+    // Handle onboarding completion explicitly
+    if (onboardingCompleted !== undefined) {
+      user.onboardingCompleted = onboardingCompleted;
+    } else {
+      // Check if onboarding is completed automatically
+      const steps = user.onboardingSteps;
+      user.onboardingCompleted = steps.profileSetup && 
+                                 (steps.businessInfo || !user.isCreator) &&
+                                 steps.serviceSettings &&
+                                 steps.notificationPrefs;
+    }
 
     await user.save();
 
