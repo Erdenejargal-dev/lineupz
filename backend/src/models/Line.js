@@ -39,6 +39,41 @@ const lineSchema = new mongoose.Schema({
   
   // NEW: Appointment settings (only used for appointments/hybrid)
   appointmentSettings: {
+    // Meeting type: in-person or online
+    meetingType: {
+      type: String,
+      enum: ['in-person', 'online', 'both'],
+      default: 'in-person'
+    },
+    // Physical location for in-person meetings
+    location: {
+      address: {
+        type: String,
+        trim: true
+      },
+      instructions: {
+        type: String,
+        trim: true,
+        maxlength: 500
+      }
+    },
+    // Online meeting settings
+    onlineSettings: {
+      platform: {
+        type: String,
+        enum: ['google-meet', 'zoom', 'teams', 'custom'],
+        default: 'google-meet'
+      },
+      autoCreateMeeting: {
+        type: Boolean,
+        default: true
+      },
+      meetingInstructions: {
+        type: String,
+        trim: true,
+        maxlength: 500
+      }
+    },
     duration: {
       type: Number,
       default: 30,

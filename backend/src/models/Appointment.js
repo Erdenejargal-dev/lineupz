@@ -45,6 +45,48 @@ const appointmentSchema = new mongoose.Schema({
     default: 'appointment'
   },
   
+  // Meeting details
+  meetingType: {
+    type: String,
+    enum: ['in-person', 'online'],
+    required: true
+  },
+  
+  // Location for in-person meetings
+  location: {
+    address: String,
+    instructions: String
+  },
+  
+  // Online meeting details
+  onlineMeeting: {
+    platform: {
+      type: String,
+      enum: ['google-meet', 'zoom', 'teams', 'custom'],
+      default: 'google-meet'
+    },
+    meetingUrl: String,
+    meetingId: String,
+    password: String,
+    instructions: String,
+    // Google Meet specific
+    googleMeet: {
+      conferenceId: String,
+      entryPoints: [{
+        entryPointType: String,
+        uri: String,
+        label: String
+      }],
+      conferenceSolution: {
+        key: {
+          type: String
+        },
+        name: String,
+        iconUri: String
+      }
+    }
+  },
+  
   // Additional info
   notes: {
     type: String,
