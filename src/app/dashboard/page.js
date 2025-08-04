@@ -326,8 +326,8 @@ const MyAppointments = ({ token }) => {
 };
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState('queue');
   const [myQueue, setMyQueue] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [token, setToken] = useState(null);
@@ -347,8 +347,8 @@ export default function DashboardPage() {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
         
-        // Check if user needs onboarding - show if either condition is missing
-        if (!parsedUser.onboardingCompleted || !parsedUser.isEmailVerified) {
+        // Simple onboarding - only show if email not verified
+        if (!parsedUser.isEmailVerified) {
           setShowOnboarding(true);
         }
       } catch (e) {
@@ -617,32 +617,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => setActiveTab('queue')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'queue'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            Queue Lines
-          </button>
-          <button
-            onClick={() => setActiveTab('appointments')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'appointments'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <Calendar className="h-4 w-4" />
-            Appointments
-          </button>
-        </div>
-
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
             {error}
@@ -670,40 +644,42 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Tab Content */}
-        {activeTab === 'queue' && (
+        {/* Current Queues */}
+        {myQueue.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Your Current Queues</h2>
-            
-            {myQueue.length === 0 ? (
-              <div className="text-center py-12">
-                <QrCode className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No active queues</h3>
-                <p className="text-gray-600 mb-6">You're not currently waiting in any lines.</p>
-                <button
-                  onClick={() => window.location.href = '/join'}
-                  className="bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-                >
-                  Join Your First Line
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {myQueue.map(queueEntry => (
-                  <QueueCard
-                    key={queueEntry._id}
-                    queueEntry={queueEntry}
-                    onLeave={leaveLine}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {myQueue.map(queueEntry => (
+                <QueueCard
+                  key={queueEntry._id}
+                  queueEntry={queueEntry}
+                  onLeave={leaveLine}
+                />
+              ))}
+            </div>
           </div>
         )}
 
-        {activeTab === 'appointments' && (
-          <div className="mb-8">
-            <MyAppointments token={token} />
+        {/* Appointments */}
+        <div className="mb-8">
+          <MyAppointments token={token} />
+        </div>
+
+        {/* Empty State - Show only if both are empty */}
+        {myQueue.length === 0 && appointments.length === 0 && (
+          <div className="text-center py-12">
+            <div className="flex justify-center gap-4 mb-6">
+              <QrCode className="h-12 w-12 text-gray-300" />
+              <Calendar className="h-12 w-12 text-gray-300" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No active lines or appointments</h3>
+            <p className="text-gray-600 mb-6">You're not currently in any queues or have any scheduled appointments.</p>
+            <button
+              onClick={() => window.location.href = '/join'}
+              className="bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Join Your First Line
+            </button>
           </div>
         )}
       </div>

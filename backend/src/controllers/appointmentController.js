@@ -631,6 +631,7 @@ const bookAppointment = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Appointment booked successfully',
+      redirectTo: '/dashboard',
       appointment: {
         _id: appointment._id,
         appointmentTime: appointment.appointmentTime,
@@ -638,6 +639,9 @@ const bookAppointment = async (req, res) => {
         duration: appointment.duration,
         status: appointment.status,
         notes: appointment.notes,
+        meetingType: appointment.meetingType,
+        location: appointment.location,
+        onlineMeeting: appointment.onlineMeeting,
         line: {
           _id: appointment.line._id,
           title: appointment.line.title,

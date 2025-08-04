@@ -17,78 +17,44 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
     name: user?.name || '',
     email: user?.email || '',
     
-    // Creator-specific fields
+    // Creator-specific fields (only for creators)
     businessName: user?.businessName || '',
     businessDescription: user?.businessDescription || '',
     businessAddress: user?.businessAddress || '',
-    businessWebsite: user?.businessWebsite || '',
-    businessCategory: user?.businessCategory || '',
-    
-    // Notification preferences (for creators)
-    emailEnabled: user?.notificationPreferences?.email?.enabled !== false,
-    emailAppointmentConfirmations: user?.notificationPreferences?.email?.appointmentConfirmations !== false,
-    emailAppointmentReminders: user?.notificationPreferences?.email?.appointmentReminders !== false,
-    smsEnabled: user?.notificationPreferences?.sms?.enabled !== false,
-    smsAppointmentConfirmations: user?.notificationPreferences?.sms?.appointmentConfirmations !== false,
-    smsAppointmentReminders: user?.notificationPreferences?.sms?.smsAppointmentReminders !== false
+    businessCategory: user?.businessCategory || ''
   });
 
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [emailOtp, setEmailOtp] = useState('');
-  const [calendarStatus, setCalendarStatus] = useState({
-    connected: false,
-    loading: false
-  });
 
-  // Define steps based on user type
+  // Define steps based on user type - SIMPLIFIED
   const getSteps = () => {
     if (userType === 'creator') {
       return [
         {
           id: 'profile',
-          title: 'Profile Setup',
-          description: 'Basic information about you',
-          icon: User,
-          required: true
-        },
-        {
-          id: 'business',
-          title: 'Business Information',
-          description: 'Tell customers about your business',
-          icon: Building,
-          required: true
-        },
-        {
-          id: 'notifications',
-          title: 'Notifications',
-          description: 'Choose how you want to be notified',
+          title: 'Email Verification',
+          description: 'Verify your email address',
           icon: Mail,
           required: true
         },
         {
-          id: 'calendar',
-          title: 'Google Calendar',
-          description: 'Connect your calendar for automatic sync',
-          icon: Calendar,
-          required: false
+          id: 'business',
+          title: 'Business Details',
+          description: 'Basic business information',
+          icon: Building,
+          required: true
         }
       ];
     } else {
-      // Regular customer onboarding - simplified
+      // Customer onboarding - just email verification
       return [
         {
           id: 'profile',
-          title: 'Profile Setup',
-          description: 'Basic information and email verification',
-          icon: User,
+          title: 'Email Verification',
+          description: 'Verify your email address',
+          icon: Mail,
           required: true
-        },
-        {
-          id: 'calendar',
-          title: 'Google Calendar',
-          description: 'Connect your calendar (optional)',
-          icon: Calendar,
-          required: false
         }
       ];
     }
@@ -107,31 +73,6 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
     'Entertainment',
     'Other'
   ];
-
-  useEffect(() => {
-    loadCalendarStatus();
-  }, []);
-
-  const loadCalendarStatus = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/google-calendar/status`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setCalendarStatus({
-          connected: data.calendar?.connected || false,
-          loading: false
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load calendar status:', error);
-    }
-  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -213,6 +154,11 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
       if (response.ok) {
         setEmailVerificationSent(false);
         setEmailOtp('');
+        
+        // Update user in localStorage
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
         return true;
       } else {
         setError(data.message || 'Failed to verify email');
@@ -223,43 +169,6 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
       return false;
     } finally {
       setLoading(false);
-    }
-  };
-
-  const connectGoogleCalendar = async () => {
-    try {
-      setCalendarStatus(prev => ({ ...prev, loading: true }));
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`${API_BASE_URL}/google-calendar/auth-url`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        window.open(data.authUrl, 'google-calendar-auth', 'width=500,height=600');
-        
-        const checkConnection = setInterval(async () => {
-          await loadCalendarStatus();
-          if (calendarStatus.connected) {
-            clearInterval(checkConnection);
-            setCalendarStatus(prev => ({ ...prev, loading: false }));
-          }
-        }, 2000);
-        
-        setTimeout(() => {
-          clearInterval(checkConnection);
-          setCalendarStatus(prev => ({ ...prev, loading: false }));
-        }, 300000);
-      } else {
-        setError(data.message || 'Failed to get authorization URL');
-        setCalendarStatus(prev => ({ ...prev, loading: false }));
-      }
-    } catch (error) {
-      setError('Failed to connect Google Calendar');
-      setCalendarStatus(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -274,16 +183,8 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
 
       switch (stepId) {
         case 'profile':
-          endpoint = '/auth/profile';
-          payload = {
-            name: formData.name,
-            email: formData.email
-          };
-          // Mark as creator if this is creator onboarding
-          if (userType === 'creator') {
-            payload.isCreator = true;
-          }
-          break;
+          // Profile step is handled by email verification
+          return true;
 
         case 'business':
           endpoint = '/auth/profile';
@@ -291,25 +192,9 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
             businessName: formData.businessName,
             businessDescription: formData.businessDescription,
             businessAddress: formData.businessAddress,
-            businessWebsite: formData.businessWebsite,
             businessCategory: formData.businessCategory,
-            isCreator: true
-          };
-          break;
-
-        case 'notifications':
-          endpoint = '/auth/notification-preferences';
-          payload = {
-            email: {
-              enabled: formData.emailEnabled,
-              appointmentConfirmations: formData.emailAppointmentConfirmations,
-              appointmentReminders: formData.emailAppointmentReminders
-            },
-            sms: {
-              enabled: formData.smsEnabled,
-              appointmentConfirmations: formData.smsAppointmentConfirmations,
-              appointmentReminders: formData.smsAppointmentReminders
-            }
+            isCreator: true,
+            onboardingCompleted: true // Mark onboarding as complete
           };
           break;
 
@@ -347,12 +232,34 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
   const handleNext = async () => {
     const currentStepData = steps[currentStep];
     
+    // For profile step, check if email is verified
+    if (currentStepData.id === 'profile' && !user?.isEmailVerified) {
+      setError('Please verify your email before continuing');
+      return;
+    }
+    
     const saved = await saveStepData(currentStepData.id);
     if (!saved) return;
 
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Mark onboarding as complete for customers
+      if (userType === 'customer') {
+        try {
+          const token = localStorage.getItem('token');
+          await fetch(`${API_BASE_URL}/auth/profile`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ onboardingCompleted: true })
+          });
+        } catch (error) {
+          console.error('Failed to mark onboarding complete:', error);
+        }
+      }
       onComplete();
     }
   };
@@ -370,13 +277,19 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
       case 'profile':
         return (
           <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 mb-2">Email Verification Required</h4>
+              <p className="text-sm text-blue-700">
+                We need to verify your email address to send you important notifications.
+              </p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Name *
+                Your Name
               </label>
               <input
                 type="text"
-                required
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -408,7 +321,7 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
                     {!emailVerificationSent ? (
                       <button
                         onClick={sendEmailVerification}
-                        disabled={loading}
+                        disabled={loading || !formData.email}
                         className="text-sm bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 disabled:opacity-50"
                       >
                         {loading ? 'Sending...' : 'Send Verification Code'}
@@ -429,7 +342,13 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
                           className="w-full px-2 py-1 border border-yellow-300 rounded text-sm"
                           onKeyPress={async (e) => {
                             if (e.key === 'Enter' && e.target.value) {
-                              await verifyEmail(e.target.value);
+                              const verified = await verifyEmail(e.target.value);
+                              if (verified) {
+                                // Refresh user data
+                                const updatedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                                // Force re-render by updating user prop reference
+                                window.location.reload();
+                              }
                             }
                           }}
                         />
@@ -441,7 +360,7 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
                 {user?.isEmailVerified && (
                   <div className="flex items-center gap-2 text-green-600 text-sm">
                     <CheckCircle className="h-4 w-4" />
-                    Email verified
+                    Email verified ✓
                   </div>
                 )}
               </div>
@@ -455,7 +374,7 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-medium text-blue-900 mb-2">Business Information</h4>
               <p className="text-sm text-blue-700">
-                This information will be shown to customers when they book appointments.
+                Basic information about your business for customers.
               </p>
             </div>
 
@@ -492,178 +411,28 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Address
+                Business Address (Optional)
               </label>
               <input
                 type="text"
                 value={formData.businessAddress}
                 onChange={(e) => handleInputChange('businessAddress', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Business address (for in-person appointments)"
+                placeholder="Business address for in-person appointments"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
+                Description (Optional)
               </label>
               <textarea
                 value={formData.businessDescription}
                 onChange={(e) => handleInputChange('businessDescription', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows="3"
-                placeholder="Brief description of your business and services"
+                placeholder="Brief description of your business"
               />
-            </div>
-          </div>
-        );
-
-      case 'notifications':
-        return (
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Notification Preferences</h4>
-              <p className="text-sm text-blue-700">
-                Choose how you want to receive notifications about appointments.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-900">Email Notifications</h4>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.emailEnabled}
-                      onChange={(e) => handleInputChange('emailEnabled', e.target.checked)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">Enable</span>
-                  </label>
-                </div>
-
-                {formData.emailEnabled && (
-                  <div className="space-y-2 ml-4">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.emailAppointmentConfirmations}
-                        onChange={(e) => handleInputChange('emailAppointmentConfirmations', e.target.checked)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">Appointment confirmations</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.emailAppointmentReminders}
-                        onChange={(e) => handleInputChange('emailAppointmentReminders', e.target.checked)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">Appointment reminders</span>
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-900">SMS Notifications</h4>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.smsEnabled}
-                      onChange={(e) => handleInputChange('smsEnabled', e.target.checked)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">Enable</span>
-                  </label>
-                </div>
-
-                {formData.smsEnabled && (
-                  <div className="space-y-2 ml-4">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.smsAppointmentConfirmations}
-                        onChange={(e) => handleInputChange('smsAppointmentConfirmations', e.target.checked)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">Appointment confirmations</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.smsAppointmentReminders}
-                        onChange={(e) => handleInputChange('smsAppointmentReminders', e.target.checked)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">Appointment reminders</span>
-                    </label>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'calendar':
-        return (
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Google Calendar Integration</h4>
-              <p className="text-sm text-blue-700">
-                {userType === 'creator' 
-                  ? 'Connect your Google Calendar to automatically sync appointments and check availability.'
-                  : 'Connect your Google Calendar to see your appointments (optional).'
-                }
-              </p>
-            </div>
-
-            <div className="text-center py-8">
-              {calendarStatus.connected ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-2 text-green-600">
-                    <CheckCircle className="h-8 w-8" />
-                    <span className="text-lg font-medium">Calendar Connected!</span>
-                  </div>
-                  <p className="text-gray-600">
-                    Your Google Calendar is connected and ready.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Calendar className="h-16 w-16 text-gray-400 mx-auto" />
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">Connect Google Calendar</h4>
-                    <p className="text-gray-600 mb-6">
-                      {userType === 'creator'
-                        ? 'Sync your appointments with Google Calendar for better organization.'
-                        : 'Keep track of your appointments in Google Calendar.'
-                      }
-                    </p>
-                  </div>
-                  
-                  <button
-                    onClick={connectGoogleCalendar}
-                    disabled={calendarStatus.loading}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 mx-auto"
-                  >
-                    {calendarStatus.loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Connecting...
-                      </>
-                    ) : (
-                      <>
-                        <Calendar className="h-4 w-4" />
-                        Connect Google Calendar
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         );
@@ -678,7 +447,7 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -688,8 +457,8 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
               </h2>
               <p className="text-gray-600">
                 {userType === 'creator' 
-                  ? 'Set up your business profile to start managing appointments'
-                  : 'Quick setup to get you started'
+                  ? 'Quick setup to start managing appointments'
+                  : 'Just verify your email to get started'
                 }
               </p>
             </div>
@@ -697,12 +466,12 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
               onClick={onSkip}
               className="text-gray-400 hover:text-gray-600 text-sm"
             >
-              Skip for now
+              Skip
             </button>
           </div>
 
           {/* Progress Steps */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-center mb-8">
             {steps.map((step, index) => {
               const StepIcon = step.icon;
               const isActive = index === currentStep;
@@ -741,9 +510,6 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
                 <h3 className="text-xl font-semibold text-gray-900">{currentStepData.title}</h3>
                 <p className="text-gray-600">{currentStepData.description}</p>
               </div>
-              {currentStepData.required && (
-                <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Required</span>
-              )}
             </div>
 
             {error && (
@@ -768,40 +534,23 @@ const SimpleOnboardingFlow = ({ user, userType = 'customer', onComplete, onSkip 
               Previous
             </button>
 
-            <div className="flex gap-3">
-              {!currentStepData.required && (
-                <button
-                  onClick={() => {
-                    if (currentStep < steps.length - 1) {
-                      setCurrentStep(currentStep + 1);
-                    } else {
-                      onComplete();
-                    }
-                  }}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-900"
-                >
-                  Skip
-                </button>
+            <button
+              onClick={handleNext}
+              disabled={loading || (currentStepData.id === 'profile' && !user?.isEmailVerified)}
+              className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  {currentStep === steps.length - 1 ? 'Complete Setup' : 'Next'}
+                  {currentStep < steps.length - 1 && <ChevronRight className="h-4 w-4" />}
+                </>
               )}
-              
-              <button
-                onClick={handleNext}
-                disabled={loading}
-                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    {currentStep === steps.length - 1 ? 'Complete Setup' : 'Next'}
-                    {currentStep < steps.length - 1 && <ChevronRight className="h-4 w-4" />}
-                  </>
-                )}
-              </button>
-            </div>
+            </button>
           </div>
         </div>
       </div>
