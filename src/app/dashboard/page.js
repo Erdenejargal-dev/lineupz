@@ -6,7 +6,7 @@ import SimpleOnboardingFlow from '@/components/SimpleOnboardingFlow';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
-// Appointments component
+// Enhanced Appointments component
 const MyAppointments = ({ token }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -99,6 +99,181 @@ const MyAppointments = ({ token }) => {
     })} at ${timeStr}`;
   };
 
+  const formatFullDate = (appointmentTime) => {
+    const date = new Date(appointmentTime);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const AppointmentCard = ({ appointment }) => {
+    const isOnline = appointment.meetingType === 'online';
+    const isInPerson = appointment.meetingType === 'in-person';
+    
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h4 className="text-lg font-semibold text-gray-900">{appointment.line.title}</h4>
+              <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
+                {appointment.line.lineCode}
+              </span>
+            </div>
+            {appointment.line.description && (
+              <p className="text-sm text-gray-600 mb-3">{appointment.line.description}</p>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+              appointment.status === 'confirmed' 
+                ? 'bg-green-100 text-green-800'
+                : appointment.status === 'pending'
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-gray-100 text-gray-800'
+            }`}>
+              {appointment.status}
+            </span>
+            
+            {appointment.canCancel && (
+              <button
+                onClick={() => cancelAppointment(appointment._id)}
+                className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50"
+                title="Cancel appointment"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Date and Time */}
+        <div className="bg-blue-50 rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-3">
+            <Clock className="h-5 w-5 text-blue-600" />
+            <div>
+              <p className="font-medium text-blue-900">
+                {formatAppointmentTime(appointment.appointmentTime)}
+              </p>
+              <p className="text-sm text-blue-700">
+                {formatFullDate(appointment.appointmentTime)} • {appointment.duration} minutes
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Meeting Type and Details */}
+        <div className="space-y-3 mb-4">
+          {isInPerson && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <MapPin className="h-5 w-5 text-green-600 mt-0.5" />
+                <div className="flex-1">
+                  <h5 className="font-medium text-green-900 mb-1">📍 In-Person Meeting</h5>
+                  {appointment.location?.address && (
+                    <p className="text-sm text-green-800 mb-2">
+                      <strong>Address:</strong> {appointment.location.address}
+                    </p>
+                  )}
+                  {appointment.location?.instructions && (
+                    <p className="text-sm text-green-700">
+                      <strong>Instructions:</strong> {appointment.location.instructions}
+                    </p>
+                  )}
+                  {!appointment.location?.address && !appointment.location?.instructions && (
+                    <p className="text-sm text-green-700">Location details will be provided by the service provider.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isOnline && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-100 rounded-full p-2">
+                  <span className="text-purple-600 text-sm">💻</span>
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-medium text-purple-900 mb-2">Online Meeting</h5>
+                  {appointment.onlineMeeting?.meetingUrl ? (
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => window.open(appointment.onlineMeeting.meetingUrl, '_blank')}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                      >
+                        🎥 Join Google Meet
+                      </button>
+                      <p className="text-xs text-purple-700">
+                        Meeting link: {appointment.onlineMeeting.meetingUrl}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-sm text-purple-800">
+                        <strong>Platform:</strong> {appointment.onlineMeeting?.platform || 'Google Meet'}
+                      </p>
+                      <p className="text-sm text-purple-700">
+                        Meeting link will be sent closer to the appointment time.
+                      </p>
+                    </div>
+                  )}
+                  {appointment.onlineMeeting?.instructions && (
+                    <p className="text-sm text-purple-700 mt-2">
+                      <strong>Instructions:</strong> {appointment.onlineMeeting.instructions}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Notes */}
+        {appointment.notes && (
+          <div className="bg-gray-50 rounded-lg p-3 mb-4">
+            <p className="text-sm text-gray-700">
+              <strong>Your notes:</strong> "{appointment.notes}"
+            </p>
+          </div>
+        )}
+
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <p className="text-xs text-gray-500">
+            Booked on {new Date(appointment.createdAt || appointment.appointmentTime).toLocaleDateString()}
+          </p>
+          
+          {appointment.status === 'confirmed' && (
+            <div className="flex items-center gap-2">
+              {isOnline && appointment.onlineMeeting?.meetingUrl && (
+                <button
+                  onClick={() => window.open(appointment.onlineMeeting.meetingUrl, '_blank')}
+                  className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                >
+                  Join Meeting
+                </button>
+              )}
+              {isInPerson && appointment.location?.address && (
+                <button
+                  onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(appointment.location.address)}`, '_blank')}
+                  className="text-green-600 hover:text-green-800 text-sm font-medium"
+                >
+                  Get Directions
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -108,71 +283,41 @@ const MyAppointments = ({ token }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">My Appointments</h3>
+        <h3 className="text-xl font-semibold text-gray-900">My Appointments</h3>
         <button
           onClick={loadAppointments}
-          className="text-gray-600 hover:text-gray-900 p-1"
+          className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Refresh appointments"
         >
           <RefreshCw className="h-4 w-4" />
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm">
-          {error}
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+          <p className="font-medium">Error loading appointments</p>
+          <p className="text-sm">{error}</p>
         </div>
       )}
 
       {appointments.length === 0 ? (
-        <div className="text-center py-8">
-          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">No upcoming appointments</p>
+        <div className="text-center py-12">
+          <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <h4 className="text-lg font-medium text-gray-900 mb-2">No upcoming appointments</h4>
+          <p className="text-gray-600 mb-6">You don't have any scheduled appointments yet.</p>
+          <button
+            onClick={() => window.location.href = '/join'}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Book Your First Appointment
+          </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {appointments.map((appointment) => (
-            <div key={appointment._id} className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">{appointment.line.title}</h4>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {formatAppointmentTime(appointment.appointmentTime)}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Duration: {appointment.duration} minutes
-                  </p>
-                  {appointment.notes && (
-                    <p className="text-sm text-gray-600 mt-2 italic">
-                      "{appointment.notes}"
-                    </p>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    appointment.status === 'confirmed' 
-                      ? 'bg-green-100 text-green-800'
-                      : appointment.status === 'pending'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {appointment.status}
-                  </span>
-                  
-                  {appointment.canCancel && (
-                    <button
-                      onClick={() => cancelAppointment(appointment._id)}
-                      className="text-red-600 hover:text-red-800 p-1"
-                      title="Cancel appointment"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <AppointmentCard key={appointment._id} appointment={appointment} />
           ))}
         </div>
       )}
@@ -202,8 +347,8 @@ export default function DashboardPage() {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
         
-        // Check if user needs onboarding
-        if (!parsedUser.onboardingCompleted) {
+        // Check if user needs onboarding - show if either condition is missing
+        if (!parsedUser.onboardingCompleted || !parsedUser.isEmailVerified) {
           setShowOnboarding(true);
         }
       } catch (e) {

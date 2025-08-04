@@ -450,6 +450,144 @@ const bookAppointment = async (req, res) => {
     await appointment.save();
     await appointment.populate(['line', 'user']);
     
+    // Send email notifications to both creator and customer
+    try {
+      const User = require('../models/User');
+      const emailService = require('../services/emailService');
+      
+      // Get line creator
+      const lineCreator = await User.findById(line.creator);
+      const customer = appointment.user;
+      
+      console.log('Sending appointment confirmation emails...');
+      
+      // Email to customer
+      if (customer && customer.email) {
+        const customerEmailData = {
+          to: customer.email,
+          subject: `Appointment Confirmed - ${line.title}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center;">
+                <h1 style="margin: 0; font-size: 28px;">Appointment Confirmed! 🎉</h1>
+              </div>
+              
+              <div style="padding: 30px; background: #f8f9fa;">
+                <h2 style="color: #333; margin-bottom: 20px;">Your appointment has been booked</h2>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                  <h3 style="color: #667eea; margin-top: 0;">${line.title}</h3>
+                  <p style="color: #666; margin: 5px 0;"><strong>Code:</strong> ${line.lineCode}</p>
+                  ${line.description ? `<p style="color: #666; margin: 5px 0;">${line.description}</p>` : ''}
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                  <h4 style="color: #333; margin-top: 0;">📅 Appointment Details</h4>
+                  <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${new Date(appointment.appointmentTime).toLocaleString()}</p>
+                  <p style="margin: 5px 0;"><strong>Duration:</strong> ${appointment.duration} minutes</p>
+                  <p style="margin: 5px 0;"><strong>Status:</strong> ${appointment.status}</p>
+                  ${appointment.notes ? `<p style="margin: 5px 0;"><strong>Your Notes:</strong> ${appointment.notes}</p>` : ''}
+                </div>
+                
+                ${finalMeetingType === 'in-person' ? `
+                  <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="color: #2d5a2d; margin-top: 0;">📍 In-Person Meeting</h4>
+                    ${appointmentData.location?.address ? `<p style="margin: 5px 0;"><strong>Address:</strong> ${appointmentData.location.address}</p>` : ''}
+                    ${appointmentData.location?.instructions ? `<p style="margin: 5px 0;"><strong>Instructions:</strong> ${appointmentData.location.instructions}</p>` : ''}
+                  </div>
+                ` : ''}
+                
+                ${finalMeetingType === 'online' ? `
+                  <div style="background: #f0e8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="color: #6b46c1; margin-top: 0;">💻 Online Meeting</h4>
+                    <p style="margin: 5px 0;"><strong>Platform:</strong> ${appointmentData.onlineMeeting?.platform || 'Google Meet'}</p>
+                    <p style="margin: 5px 0;">Meeting link will be sent closer to the appointment time.</p>
+                    ${appointmentData.onlineMeeting?.instructions ? `<p style="margin: 5px 0;"><strong>Instructions:</strong> ${appointmentData.onlineMeeting.instructions}</p>` : ''}
+                  </div>
+                ` : ''}
+                
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="https://tabi.mn/dashboard" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">View My Appointments</a>
+                </div>
+                
+                <p style="color: #666; font-size: 14px; margin-top: 30px; text-align: center;">
+                  Need to cancel or reschedule? Visit your dashboard or contact the service provider.
+                </p>
+              </div>
+              
+              <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 14px;">
+                <p style="margin: 0;">This email was sent by <strong>Tabi</strong> - Smart Queue & Appointment Management</p>
+                <p style="margin: 5px 0 0 0;">Visit us at <a href="https://tabi.mn" style="color: #667eea;">tabi.mn</a></p>
+              </div>
+            </div>
+          `
+        };
+        
+        await emailService.sendEmail(customerEmailData);
+        console.log('Customer confirmation email sent successfully');
+      }
+      
+      // Email to creator
+      if (lineCreator && lineCreator.email) {
+        const creatorEmailData = {
+          to: lineCreator.email,
+          subject: `New Appointment Booked - ${line.title}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center;">
+                <h1 style="margin: 0; font-size: 28px;">New Appointment Booked! 📅</h1>
+              </div>
+              
+              <div style="padding: 30px; background: #f8f9fa;">
+                <h2 style="color: #333; margin-bottom: 20px;">You have a new appointment</h2>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                  <h3 style="color: #667eea; margin-top: 0;">${line.title}</h3>
+                  <p style="color: #666; margin: 5px 0;"><strong>Code:</strong> ${line.lineCode}</p>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                  <h4 style="color: #333; margin-top: 0;">👤 Customer Details</h4>
+                  <p style="margin: 5px 0;"><strong>Name:</strong> ${customer.name || 'Not provided'}</p>
+                  <p style="margin: 5px 0;"><strong>Email:</strong> ${customer.email || 'Not provided'}</p>
+                  ${customer.phone ? `<p style="margin: 5px 0;"><strong>Phone:</strong> ${customer.phone}</p>` : ''}
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                  <h4 style="color: #333; margin-top: 0;">📅 Appointment Details</h4>
+                  <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${new Date(appointment.appointmentTime).toLocaleString()}</p>
+                  <p style="margin: 5px 0;"><strong>Duration:</strong> ${appointment.duration} minutes</p>
+                  <p style="margin: 5px 0;"><strong>Meeting Type:</strong> ${finalMeetingType}</p>
+                  <p style="margin: 5px 0;"><strong>Status:</strong> ${appointment.status}</p>
+                  ${appointment.notes ? `<p style="margin: 5px 0;"><strong>Customer Notes:</strong> ${appointment.notes}</p>` : ''}
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="https://tabi.mn/creator-dashboard" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Manage Appointments</a>
+                </div>
+                
+                <p style="color: #666; font-size: 14px; margin-top: 30px; text-align: center;">
+                  You can manage this appointment from your creator dashboard.
+                </p>
+              </div>
+              
+              <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 14px;">
+                <p style="margin: 0;">This email was sent by <strong>Tabi</strong> - Smart Queue & Appointment Management</p>
+                <p style="margin: 5px 0 0 0;">Visit us at <a href="https://tabi.mn" style="color: #667eea;">tabi.mn</a></p>
+              </div>
+            </div>
+          `
+        };
+        
+        await emailService.sendEmail(creatorEmailData);
+        console.log('Creator notification email sent successfully');
+      }
+      
+    } catch (emailError) {
+      console.error('Failed to send appointment emails:', emailError);
+      // Don't fail the request if email fails
+    }
+    
     // Sync to Google Calendar if enabled
     if (syncAppointmentToCalendar) {
       try {
