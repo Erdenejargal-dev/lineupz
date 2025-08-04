@@ -218,8 +218,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Business Information */}
-        {(user?.isCreator || formData.businessName) && (
+        {/* Creator Section */}
+        {user?.isCreator ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <div className="flex items-center gap-3 mb-6">
               <Building className="h-6 w-6 text-blue-600" />
@@ -294,6 +294,70 @@ export default function ProfilePage() {
                   placeholder="Brief description of your business"
                 />
               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Building className="h-6 w-6 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Become a Creator</h2>
+            </div>
+            
+            <p className="text-gray-700 mb-4">
+              Want to create lines and manage appointments? Upgrade to a creator account to start managing queues and bookings for your business.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    setSaving(true);
+                    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({ isCreator: true })
+                    });
+
+                    const data = await response.json();
+                    if (response.ok) {
+                      localStorage.setItem('user', JSON.stringify(data.user));
+                      setUser(data.user);
+                      setSuccess('Creator account activated! You can now add business information.');
+                      setTimeout(() => setSuccess(''), 3000);
+                    } else {
+                      setError(data.message || 'Failed to activate creator account');
+                    }
+                  } catch (error) {
+                    setError('Failed to activate creator account');
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                disabled={saving}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+              >
+                {saving ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Activating...
+                  </>
+                ) : (
+                  <>
+                    <Building className="h-4 w-4" />
+                    Become a Creator
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={() => window.location.href = '/creator-dashboard'}
+                className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Learn More
+              </button>
             </div>
           </div>
         )}
