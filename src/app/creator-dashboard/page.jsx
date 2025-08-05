@@ -219,7 +219,13 @@ const CreatorDashboard = () => {
         )}
 
         {activeTab === 'overview' && (
-          <OverviewTab dashboardData={dashboardData} />
+          <OverviewTab 
+            dashboardData={dashboardData} 
+            myLines={myLines}
+            onCreateLine={() => setActiveTab('lines')}
+            onToggleAvailability={toggleLineAvailability}
+            refreshing={refreshing}
+          />
         )}
 
         {activeTab === 'lines' && (
@@ -245,9 +251,16 @@ const CreatorDashboard = () => {
 };
 
 // Overview Tab Component
-const OverviewTab = ({ dashboardData }) => {
+const OverviewTab = ({ dashboardData, myLines, onCreateLine, onToggleAvailability, refreshing }) => {
   const stats = dashboardData?.stats || {};
+  const [copied, setCopied] = useState('');
   
+  const copyCode = (code) => {
+    navigator.clipboard.writeText(code);
+    setCopied(code);
+    setTimeout(() => setCopied(''), 2000);
+  };
+
   return (
     <div className="space-y-6">
       {/* Subscription Card */}
@@ -296,26 +309,127 @@ const OverviewTab = ({ dashboardData }) => {
         </div>
       </div>
 
-      {/* Recent Lines */}
+      {/* My Lines Carousel */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Lines</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">My Lines</h3>
+          <button
+            onClick={() => onCreateLine && onCreateLine()}
+            className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 text-sm"
+          >
+            <Plus className="h-4 w-4" />
+            Create Line
+          </button>
+        </div>
+        
+        {myLines && myLines.length > 0 ? (
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-4 pb-2" style={{ minWidth: 'max-content' }}>
+              {myLines.map((line) => (
+                <div key={line._id} className="bg-gray-50 rounded-lg p-4 min-w-[280px] flex-shrink-0">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 truncate">{line.title}</h4>
+                      <p className="text-sm text-gray-600 truncate">{line.description}</p>
+                    </div>
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ml-2 flex-shrink-0 ${
+                      line.isAvailable 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {line.isAvailable ? 'Active' : 'Paused'}
+                    </span>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-3 mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-mono font-bold text-gray-900">{line.lineCode}</span>
+                      <button
+                        onClick={() => copyCode(line.lineCode)}
+                        className="text-gray-600 hover:text-gray-900 p-1"
+                        title="Copy code"
+                      >
+                        {copied === line.lineCode ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Share this code</p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                    <div>
+                      <div className="font-semibold text-blue-600">{line.queueCount || 0}</div>
+                      <div className="text-xs text-gray-500">Queue</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-orange-600">{line.estimatedWaitTime || 0}m</div>
+                      <div className="text-xs text-gray-500">Wait</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-600">{line.settings?.maxCapacity || 0}</div>
+                      <div className="text-xs text-gray-500">Max</div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => onToggleAvailability && onToggleAvailability(line._id)}
+                      disabled={refreshing}
+                      className={`flex-1 px-2 py-1 text-xs font-medium rounded transition-colors disabled:opacity-50 ${
+                        line.isAvailable
+                          ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                          : 'bg-green-50 text-green-600 hover:bg-green-100'
+                      }`}
+                    >
+                      {line.isAvailable ? 'Pause' : 'Activate'}
+                    </button>
+                    <button
+                      onClick={() => window.location.href = '/creator-dashboard?tab=lines'}
+                      className="flex-1 px-2 py-1 text-xs font-medium rounded bg-gray-900 text-white hover:bg-gray-800"
+                    >
+                      Manage
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <QrCode className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 mb-4">No lines created yet</p>
+            <button
+              onClick={() => onCreateLine && onCreateLine()}
+              className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Create Your First Line
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Recent Activity */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity</h3>
         {dashboardData?.recentLines?.length > 0 ? (
-          <div className="space-y-4">
-            {dashboardData.recentLines.map((line) => (
-              <div key={line._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h4 className="font-medium text-gray-900">{line.title}</h4>
-                  <p className="text-sm text-gray-500">Code: {line.lineCode}</p>
+          <div className="space-y-3">
+            {dashboardData.recentLines.slice(0, 3).map((line) => (
+              <div key={line._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${line.isCurrentlyAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <div>
+                    <h4 className="font-medium text-gray-900">{line.title}</h4>
+                    <p className="text-sm text-gray-500">Code: {line.lineCode}</p>
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-semibold text-gray-900">{line.currentQueue}</div>
+                  <div className="text-lg font-semibold text-gray-900">{line.currentQueue || 0}</div>
                   <div className="text-xs text-gray-500">in queue</div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">No lines created yet</p>
+          <p className="text-gray-500 text-center py-4">No recent activity</p>
         )}
       </div>
     </div>
@@ -458,7 +572,7 @@ const LinesTab = ({ myLines, onCreateLine, onToggleAvailability, refreshing, loa
                 required
                 value={createFormData.title}
                 onChange={(e) => setCreateFormData({...createFormData, title: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                 placeholder="Coffee Shop Queue"
               />
             </div>
@@ -1144,8 +1258,15 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900">Create New Line</h3>
@@ -1472,7 +1593,7 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
 
 // NEW: Line Management Modal
 const LineManagementModal = ({ line, onClose, onUpdate }) => {
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState('queue');
   const [editData, setEditData] = useState({
     title: line.title || '',
     description: line.description || '',
@@ -1556,9 +1677,8 @@ const LineManagementModal = ({ line, onClose, onUpdate }) => {
           {/* Tabs */}
           <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
             {[
-              { id: 'details', name: 'Line Details', icon: '📝' },
-              { id: 'schedule', name: 'Schedule', icon: '🕒' },
-              { id: 'queue', name: 'Current Queue', icon: '👥' }
+              { id: 'queue', name: 'Current Queue', icon: '👥' },
+              { id: 'details', name: 'Line Details', icon: '📝' }
             ].map((tab) => (
               <button
                 key={tab.id}
