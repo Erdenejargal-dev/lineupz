@@ -85,6 +85,12 @@ const Header: React.FC<HeaderProps> = ({ onLogin }) => {
                 >
                   Join Line
                 </Link>
+                <Link
+                  href="/pricing"
+                  className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+                >
+                  Pricing
+                </Link>
                 
                 <div className="flex items-center gap-3">
                   <button
@@ -178,6 +184,14 @@ const Header: React.FC<HeaderProps> = ({ onLogin }) => {
                     onClick={closeMobileMenu}
                   >
                     Join Line
+                  </Link>
+                  
+                  <Link
+                    href="/pricing"
+                    className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                    onClick={closeMobileMenu}
+                  >
+                    Pricing
                   </Link>
                   
                   <Link

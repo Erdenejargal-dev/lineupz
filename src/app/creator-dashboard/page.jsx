@@ -7,6 +7,7 @@ import {
   TrendingUp, Calendar, User
 } from 'lucide-react';
 import CreateLineForm from '../../components/CreateLineForm';
+import SubscriptionCard from '../../components/SubscriptionCard';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
@@ -247,6 +248,9 @@ const OverviewTab = ({ dashboardData }) => {
   
   return (
     <div className="space-y-6">
+      {/* Subscription Card */}
+      <SubscriptionCard />
+      
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
