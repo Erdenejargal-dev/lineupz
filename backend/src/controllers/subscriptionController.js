@@ -22,7 +22,7 @@ const getPlans = async (req, res) => {
 // Get user's current subscription
 const getCurrentSubscription = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.userId;
     
     let subscription = await Subscription.findOne({ userId }).populate('userId', 'name email phone');
     
@@ -62,7 +62,7 @@ const getCurrentSubscription = async (req, res) => {
 // Request plan upgrade
 const requestUpgrade = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.userId;
     const { plan, paymentMethod, bankTransactionId } = req.body;
     
     // Validate plan
@@ -176,7 +176,7 @@ const approveUpgrade = async (req, res) => {
 // Cancel subscription
 const cancelSubscription = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.userId;
     const { cancelAtPeriodEnd = true } = req.body;
     
     const subscription = await Subscription.findOne({ userId });
@@ -219,7 +219,7 @@ const cancelSubscription = async (req, res) => {
 // Get usage statistics
 const getUsageStats = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.userId;
     
     const subscription = await Subscription.findOne({ userId });
     
@@ -266,7 +266,7 @@ const getUsageStats = async (req, res) => {
 // Check if user can perform action
 const checkLimits = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.userId;
     const { action } = req.params; // 'create_queue', 'add_customer', etc.
     
     const subscription = await Subscription.findOne({ userId });
