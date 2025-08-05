@@ -1,6 +1,8 @@
 const Line = require('../models/Line');
 const LineJoiner = require('../models/LineJoiner');
 const User = require('../models/User');
+const Subscription = require('../models/Subscription');
+const { updateUsage } = require('./subscriptionController');
 
 // Generate unique 6-digit line code
 const generateLineCode = async () => {
@@ -18,6 +20,30 @@ const generateLineCode = async () => {
 
 const createLine = async (req, res) => {
   try {
+    // Check subscription limits first
+    const subscription = await Subscription.findOne({ userId: req.userId });
+    if (!subscription) {
+      // Create default free subscription if none exists
+      const newSubscription = new Subscription({
+        userId: req.userId,
+        plan: 'free'
+      });
+      await newSubscription.save();
+    } else {
+      // Check if user can create more queues
+      const canCreate = subscription.canCreateQueue();
+      if (!canCreate) {
+        return res.status(403).json({
+          success: false,
+          message: `You've reached your queue limit (${subscription.limits.maxQueues}). Please upgrade your plan to create more queues.`,
+          upgradeRequired: true,
+          currentPlan: subscription.plan,
+          currentUsage: subscription.usage.queuesUsed,
+          limit: subscription.limits.maxQueues
+        });
+      }
+    }
+
     const { 
       title, 
       description, 
@@ -196,6 +222,9 @@ const createLine = async (req, res) => {
     // Create and save the line
     const line = new Line(lineData);
     await line.save();
+
+    // Update subscription usage
+    await updateUsage(req.userId, 'queue', 1);
 
     // Update user to be a creator if not already
     await User.findByIdAndUpdate(req.userId, {

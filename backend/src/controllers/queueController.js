@@ -1,6 +1,8 @@
 const LineJoiner = require('../models/LineJoiner');
 const Line = require('../models/Line');
 const User = require('../models/User');
+const Subscription = require('../models/Subscription');
+const { updateUsage } = require('./subscriptionController');
 const { notifyQueueUpdate, notifyRestaurantUpdate } = require('./notificationController');
 
 // Join a line using 6-digit code
@@ -54,6 +56,19 @@ const joinLine = async (req, res) => {
       });
     }
 
+    // Check subscription limits for the line creator
+    const creatorSubscription = await Subscription.findOne({ userId: line.creator });
+    if (creatorSubscription) {
+      const canAddCustomer = creatorSubscription.canAddCustomer();
+      if (!canAddCustomer) {
+        return res.status(403).json({
+          success: false,
+          message: 'This business has reached their monthly customer limit. Please try again next month.',
+          businessLimitReached: true
+        });
+      }
+    }
+
     // Check line capacity
     const currentCount = await LineJoiner.countDocuments({
       line: line._id,
@@ -94,6 +109,11 @@ const joinLine = async (req, res) => {
     await User.findByIdAndUpdate(req.userId, {
       $inc: { totalTimesJoined: 1 }
     });
+
+    // Update creator's subscription usage (customer count)
+    if (creatorSubscription) {
+      await updateUsage(line.creator, 'customer', 1);
+    }
 
     // Populate line and user info for response
     await lineJoiner.populate([
