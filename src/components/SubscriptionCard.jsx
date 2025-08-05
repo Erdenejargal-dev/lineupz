@@ -16,9 +16,10 @@ export default function SubscriptionCard() {
   const fetchSubscriptionData = async () => {
     try {
       const token = localStorage.getItem('token');
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
       
       // Fetch current subscription
-      const subResponse = await fetch('/api/subscription/current', {
+      const subResponse = await fetch(`${API_BASE_URL}/subscription/current`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -26,7 +27,7 @@ export default function SubscriptionCard() {
       const subData = await subResponse.json();
       
       // Fetch usage stats
-      const usageResponse = await fetch('/api/subscription/usage', {
+      const usageResponse = await fetch(`${API_BASE_URL}/subscription/usage`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
