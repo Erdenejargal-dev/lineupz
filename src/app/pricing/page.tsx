@@ -268,7 +268,7 @@ export default function PricingPage() {
                 What payment methods do you accept?
               </h3>
               <p className="text-gray-600">
-                We accept QPay, bank transfers, and major credit cards for your convenience.
+                We accept QPay and major credit cards for your convenience.
               </p>
             </div>
             
@@ -394,53 +394,23 @@ function CheckoutModal({ plan, planId, onClose }: {
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Payment Method
               </label>
-              <div className="space-y-3">
-                <label className="flex items-center">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-center">
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="qpay"
-                    checked={paymentMethod === 'qpay'}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    checked={true}
+                    readOnly
                     className="mr-3"
                   />
-                  <span>QPay</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="bank_transfer"
-                    checked={paymentMethod === 'bank_transfer'}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="mr-3"
-                  />
-                  <span>Bank Transfer</span>
-                </label>
+                  <span className="font-medium text-blue-900">QPay</span>
+                </div>
+                <p className="text-sm text-blue-700 mt-2">
+                  Secure and instant payment through QPay
+                </p>
               </div>
             </div>
-
-            {paymentMethod === 'bank_transfer' && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bank Account Details
-                </label>
-                <div className="bg-gray-50 rounded-lg p-4 mb-4 text-sm">
-                  <p><strong>Bank:</strong> Khan Bank</p>
-                  <p><strong>Account:</strong> 5123456789</p>
-                  <p><strong>Name:</strong> Tabi LLC</p>
-                  <p><strong>Amount:</strong> {formatPrice(plan.price)} MNT</p>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Enter transaction ID after payment"
-                  value={bankTransactionId}
-                  onChange={(e) => setBankTransactionId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-            )}
 
             <div className="flex gap-3">
               <button
