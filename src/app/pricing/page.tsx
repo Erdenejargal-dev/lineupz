@@ -65,7 +65,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-gray-50 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 pt-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Simple, Transparent Pricing
           </h1>
@@ -268,7 +268,7 @@ export default function PricingPage() {
                 What payment methods do you accept?
               </h3>
               <p className="text-gray-600">
-                We accept bank transfers, QPay, and major credit cards for your convenience.
+                We accept QPay, bank transfers, and major credit cards for your convenience.
               </p>
             </div>
             
@@ -311,7 +311,7 @@ function CheckoutModal({ plan, planId, onClose }: {
   planId: string; 
   onClose: () => void; 
 }) {
-  const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
+  const [paymentMethod, setPaymentMethod] = useState('qpay');
   const [bankTransactionId, setBankTransactionId] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -399,23 +399,23 @@ function CheckoutModal({ plan, planId, onClose }: {
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="bank_transfer"
-                    checked={paymentMethod === 'bank_transfer'}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="mr-3"
-                  />
-                  <span>Bank Transfer</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
                     value="qpay"
                     checked={paymentMethod === 'qpay'}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                     className="mr-3"
                   />
                   <span>QPay</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="bank_transfer"
+                    checked={paymentMethod === 'bank_transfer'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="mr-3"
+                  />
+                  <span>Bank Transfer</span>
                 </label>
               </div>
             </div>
