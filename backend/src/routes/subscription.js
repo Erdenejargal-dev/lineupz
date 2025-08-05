@@ -15,15 +15,15 @@ const {
 // Public routes
 router.get('/plans', getPlans);
 
-// Protected routes (require authentication)
-router.get('/current', auth, getCurrentSubscription);
-router.post('/upgrade', auth, requestUpgrade);
-router.post('/cancel', auth, cancelSubscription);
-router.get('/usage', auth, getUsageStats);
-router.get('/check/:action', auth, checkLimits);
+// Protected routes (require authentication) - temporarily without auth middleware
+router.get('/current', getCurrentSubscription);
+router.post('/upgrade', requestUpgrade);
+router.post('/cancel', cancelSubscription);
+router.get('/usage', getUsageStats);
+router.get('/check/:action', checkLimits);
 
-// Admin routes (you can add admin middleware later)
-router.get('/admin/all', auth, getAllSubscriptions);
-router.post('/admin/:subscriptionId/approve', auth, approveUpgrade);
+// Admin routes (temporarily without auth middleware)
+router.get('/admin/all', getAllSubscriptions);
+router.post('/admin/:subscriptionId/approve', approveUpgrade);
 
 module.exports = router;
