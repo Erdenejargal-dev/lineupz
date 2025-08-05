@@ -1172,7 +1172,7 @@ const CreateLineModal = ({ onClose, onSubmit, refreshing }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-gray-900 bg-opacity-10 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -1572,7 +1572,7 @@ const LineManagementModal = ({ line, onClose, onUpdate }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-gray-900 bg-opacity-10 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
