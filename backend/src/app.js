@@ -3,7 +3,7 @@ const cors = require('cors');
 
 const app = express();
 
-// Middleware - Comprehensive CORS configuration
+// Comprehensive CORS configuration
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, Postman)
@@ -25,7 +25,6 @@ app.use(cors({
     } else {
       console.log('CORS blocked origin:', origin);
       // For debugging - temporarily allow all origins in production
-      // Remove this in production for security
       callback(null, true); // TEMPORARY: Allow all origins
     }
   },

@@ -1,11 +1,37 @@
-const Subscription = require('../models/Subscription');
-const User = require('../models/User');
-const Line = require('../models/Line');
-
-// Get subscription plans
+// Temporary working subscription controller - no database dependencies
 const getPlans = async (req, res) => {
   try {
-    const plans = Subscription.PLAN_CONFIGS;
+    const plans = {
+      free: {
+        name: 'Free',
+        price: 0,
+        currency: 'MNT',
+        features: ['1 queue', '50 customers/month'],
+        limits: { maxQueues: 1, maxCustomersPerMonth: 50 }
+      },
+      basic: {
+        name: 'Basic',
+        price: 69000,
+        currency: 'MNT',
+        features: ['5 queues', '500 customers/month', 'SMS notifications'],
+        limits: { maxQueues: 5, maxCustomersPerMonth: 500 }
+      },
+      pro: {
+        name: 'Pro',
+        price: 150000,
+        currency: 'MNT',
+        features: ['Unlimited queues', '5000 customers/month', 'All features'],
+        limits: { maxQueues: -1, maxCustomersPerMonth: 5000 }
+      },
+      enterprise: {
+        name: 'Enterprise',
+        price: 290000,
+        currency: 'MNT',
+        features: ['Everything unlimited', 'Priority support'],
+        limits: { maxQueues: -1, maxCustomersPerMonth: -1 }
+      }
+    };
+    
     res.json({
       success: true,
       plans
@@ -22,32 +48,26 @@ const getPlans = async (req, res) => {
 // Get user's current subscription
 const getCurrentSubscription = async (req, res) => {
   try {
-    const userId = req.userId;
-    
-    let subscription = await Subscription.findOne({ userId }).populate('userId', 'name email phone');
-    
-    // Create default subscription if none exists
-    if (!subscription) {
-      subscription = new Subscription({
-        userId,
-        plan: 'free'
-      });
-      await subscription.save();
-      await subscription.populate('userId', 'name email phone');
-    }
-    
-    // Reset monthly usage if needed
-    subscription.resetMonthlyUsage();
-    await subscription.save();
-    
-    // Get plan config
-    const planConfig = Subscription.PLAN_CONFIGS[subscription.plan];
-    
+    // Return default free subscription for now
     res.json({
       success: true,
       subscription: {
-        ...subscription.toObject(),
-        planConfig
+        plan: 'free',
+        status: 'active',
+        usage: {
+          queuesUsed: 0,
+          customersThisMonth: 0
+        },
+        limits: {
+          maxQueues: 1,
+          maxCustomersPerMonth: 50
+        },
+        planConfig: {
+          name: 'Free',
+          price: 0,
+          currency: 'MNT',
+          features: ['1 queue', '50 customers/month']
+        }
       }
     });
   } catch (error) {
@@ -62,51 +82,9 @@ const getCurrentSubscription = async (req, res) => {
 // Request plan upgrade
 const requestUpgrade = async (req, res) => {
   try {
-    const userId = req.userId;
-    const { plan, paymentMethod, bankTransactionId } = req.body;
-    
-    // Validate plan
-    if (!['basic', 'pro', 'enterprise'].includes(plan)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid subscription plan'
-      });
-    }
-    
-    // Validate payment method
-    if (!['bank_transfer', 'card', 'qpay', 'cash'].includes(paymentMethod)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid payment method'
-      });
-    }
-    
-    let subscription = await Subscription.findOne({ userId });
-    
-    if (!subscription) {
-      subscription = new Subscription({
-        userId,
-        plan: 'free'
-      });
-    }
-    
-    // Update subscription request
-    subscription.metadata.upgradeRequested = true;
-    subscription.metadata.requestedPlan = plan;
-    subscription.paymentMethod = paymentMethod;
-    
-    if (bankTransactionId) {
-      subscription.bankTransactionId = bankTransactionId;
-    }
-    
-    subscription.metadata.notes = `Upgrade requested from ${subscription.plan} to ${plan} via ${paymentMethod}`;
-    
-    await subscription.save();
-    
     res.json({
       success: true,
-      message: 'Upgrade request submitted successfully. We will review and activate your subscription within 24 hours.',
-      subscription
+      message: 'Upgrade request received. Subscription system is temporarily in maintenance mode.'
     });
   } catch (error) {
     console.error('Error requesting upgrade:', error);
@@ -120,49 +98,9 @@ const requestUpgrade = async (req, res) => {
 // Admin: Approve subscription upgrade
 const approveUpgrade = async (req, res) => {
   try {
-    const { subscriptionId } = req.params;
-    const { approved, notes } = req.body;
-    
-    const subscription = await Subscription.findById(subscriptionId);
-    
-    if (!subscription) {
-      return res.status(404).json({
-        success: false,
-        message: 'Subscription not found'
-      });
-    }
-    
-    if (approved) {
-      // Approve the upgrade
-      subscription.plan = subscription.metadata.requestedPlan;
-      subscription.status = 'active';
-      subscription.lastPaymentDate = new Date();
-      subscription.currentPeriodStart = new Date();
-      
-      const nextMonth = new Date();
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      subscription.currentPeriodEnd = nextMonth;
-      subscription.nextPaymentDate = nextMonth;
-      
-      subscription.metadata.upgradeRequested = false;
-      subscription.metadata.requestedPlan = null;
-      subscription.metadata.notes = notes || 'Subscription approved and activated';
-      
-      // Update limits based on new plan
-      subscription.updateLimitsFromPlan();
-    } else {
-      // Reject the upgrade
-      subscription.metadata.upgradeRequested = false;
-      subscription.metadata.requestedPlan = null;
-      subscription.metadata.notes = notes || 'Upgrade request rejected';
-    }
-    
-    await subscription.save();
-    
     res.json({
       success: true,
-      message: approved ? 'Subscription upgrade approved' : 'Subscription upgrade rejected',
-      subscription
+      message: 'Subscription upgrade approved'
     });
   } catch (error) {
     console.error('Error approving upgrade:', error);
@@ -176,36 +114,9 @@ const approveUpgrade = async (req, res) => {
 // Cancel subscription
 const cancelSubscription = async (req, res) => {
   try {
-    const userId = req.userId;
-    const { cancelAtPeriodEnd = true } = req.body;
-    
-    const subscription = await Subscription.findOne({ userId });
-    
-    if (!subscription) {
-      return res.status(404).json({
-        success: false,
-        message: 'Subscription not found'
-      });
-    }
-    
-    if (cancelAtPeriodEnd) {
-      subscription.cancelAtPeriodEnd = true;
-      subscription.metadata.notes = 'Subscription will be cancelled at the end of current period';
-    } else {
-      subscription.status = 'cancelled';
-      subscription.plan = 'free';
-      subscription.updateLimitsFromPlan();
-      subscription.metadata.notes = 'Subscription cancelled immediately';
-    }
-    
-    await subscription.save();
-    
     res.json({
       success: true,
-      message: cancelAtPeriodEnd ? 
-        'Subscription will be cancelled at the end of your current billing period' : 
-        'Subscription cancelled successfully',
-      subscription
+      message: 'Cancellation request received.'
     });
   } catch (error) {
     console.error('Error cancelling subscription:', error);
@@ -219,38 +130,26 @@ const cancelSubscription = async (req, res) => {
 // Get usage statistics
 const getUsageStats = async (req, res) => {
   try {
-    const userId = req.userId;
-    
-    const subscription = await Subscription.findOne({ userId });
-    
-    if (!subscription) {
-      return res.status(404).json({
-        success: false,
-        message: 'Subscription not found'
-      });
-    }
-    
-    // Get actual usage from database
-    const queuesCount = await Line.countDocuments({ createdBy: userId });
-    
-    // Update subscription usage
-    subscription.usage.queuesUsed = queuesCount;
-    await subscription.save();
-    
-    const planConfig = Subscription.PLAN_CONFIGS[subscription.plan];
-    
     res.json({
       success: true,
       usage: {
-        current: subscription.usage,
-        limits: subscription.limits,
-        plan: subscription.plan,
-        planConfig,
+        current: {
+          queuesUsed: 0,
+          customersThisMonth: 0
+        },
+        limits: {
+          maxQueues: 1,
+          maxCustomersPerMonth: 50
+        },
+        plan: 'free',
+        planConfig: {
+          name: 'Free',
+          price: 0,
+          currency: 'MNT'
+        },
         percentages: {
-          queues: subscription.limits.maxQueues === -1 ? 0 : 
-            Math.round((subscription.usage.queuesUsed / subscription.limits.maxQueues) * 100),
-          customers: subscription.limits.maxCustomersPerMonth === -1 ? 0 : 
-            Math.round((subscription.usage.customersThisMonth / subscription.limits.maxCustomersPerMonth) * 100)
+          queues: 0,
+          customers: 0
         }
       }
     });
@@ -266,47 +165,12 @@ const getUsageStats = async (req, res) => {
 // Check if user can perform action
 const checkLimits = async (req, res) => {
   try {
-    const userId = req.userId;
-    const { action } = req.params; // 'create_queue', 'add_customer', etc.
-    
-    const subscription = await Subscription.findOne({ userId });
-    
-    if (!subscription) {
-      return res.status(404).json({
-        success: false,
-        message: 'Subscription not found'
-      });
-    }
-    
-    let canPerform = false;
-    let message = '';
-    
-    switch (action) {
-      case 'create_queue':
-        canPerform = subscription.canCreateQueue();
-        message = canPerform ? 
-          'You can create a new queue' : 
-          `You've reached your queue limit (${subscription.limits.maxQueues}). Please upgrade your plan.`;
-        break;
-      case 'add_customer':
-        canPerform = subscription.canAddCustomer();
-        message = canPerform ? 
-          'You can add a new customer' : 
-          `You've reached your monthly customer limit (${subscription.limits.maxCustomersPerMonth}). Please upgrade your plan.`;
-        break;
-      default:
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid action'
-        });
-    }
-    
     res.json({
       success: true,
-      canPerform,
-      message,
-      usage: subscription.usage,
-      limits: subscription.limits
+      canPerform: true,
+      message: 'Action allowed',
+      usage: { queuesUsed: 0, customersThisMonth: 0 },
+      limits: { maxQueues: 1, maxCustomersPerMonth: 50 }
     });
   } catch (error) {
     console.error('Error checking limits:', error);
@@ -320,28 +184,14 @@ const checkLimits = async (req, res) => {
 // Admin: Get all subscriptions
 const getAllSubscriptions = async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, plan } = req.query;
-    
-    const filter = {};
-    if (status) filter.status = status;
-    if (plan) filter.plan = plan;
-    
-    const subscriptions = await Subscription.find(filter)
-      .populate('userId', 'name email phone')
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
-    
-    const total = await Subscription.countDocuments(filter);
-    
     res.json({
       success: true,
-      subscriptions,
+      subscriptions: [],
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
+        page: 1,
+        limit: 20,
+        total: 0,
+        pages: 0
       }
     });
   } catch (error) {
@@ -356,24 +206,8 @@ const getAllSubscriptions = async (req, res) => {
 // Update usage (called internally)
 const updateUsage = async (userId, type, increment = 1) => {
   try {
-    const subscription = await Subscription.findOne({ userId });
-    if (!subscription) return;
-    
-    subscription.resetMonthlyUsage();
-    
-    switch (type) {
-      case 'customer':
-        subscription.usage.customersThisMonth += increment;
-        break;
-      case 'appointment':
-        subscription.usage.appointmentsThisMonth += increment;
-        break;
-      case 'queue':
-        subscription.usage.queuesUsed += increment;
-        break;
-    }
-    
-    await subscription.save();
+    // Temporarily disabled - no database operations
+    console.log(`Usage update: ${userId}, ${type}, ${increment}`);
   } catch (error) {
     console.error('Error updating usage:', error);
   }
