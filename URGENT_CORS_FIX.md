@@ -1,3 +1,14 @@
+# 🚨 URGENT CORS FIX - Deploy Immediately
+
+## **The Problem**
+Your frontend (`https://tabi.mn`) cannot communicate with your API (`https://api.tabi.mn`) due to CORS restrictions. This is blocking all functionality including login, subscription system, and queue management.
+
+## **Immediate Solution**
+
+### **Step 1: Update Backend File**
+Replace your `backend/src/app.js` file with this comprehensive CORS configuration:
+
+```javascript
 const express = require('express');
 const cors = require('cors');
 
@@ -60,6 +71,7 @@ app.use((req, res, next) => {
   
   next();
 });
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -105,3 +117,87 @@ app.use((req, res) => {
 });
 
 module.exports = app;
+```
+
+### **Step 2: Deploy Immediately**
+
+**Option A: If using PM2**
+```bash
+cd /path/to/your/backend
+pm2 restart tabi-api
+# or
+pm2 restart all
+```
+
+**Option B: If using systemd**
+```bash
+sudo systemctl restart tabi-api
+```
+
+**Option C: If running manually**
+```bash
+cd /path/to/your/backend
+# Kill existing process
+pkill -f "node server.js"
+# Start again
+nohup node server.js &
+```
+
+**Option D: If using Docker**
+```bash
+docker restart tabi-backend
+```
+
+### **Step 3: Verify Fix**
+Test these URLs in your browser:
+- `https://api.tabi.mn/` (should return API status)
+- `https://api.tabi.mn/api/auth/send-otp` (should not give CORS error)
+
+## **Why This Fixes It**
+
+### **Double CORS Protection**
+1. **CORS middleware** handles the main CORS logic
+2. **Manual headers** provide backup compatibility
+3. **OPTIONS handling** ensures preflight requests work
+
+### **Permissive Configuration**
+- ✅ Allows all `tabi.mn` subdomains
+- ✅ Handles all HTTP methods
+- ✅ Includes all necessary headers
+- ✅ Temporarily allows all origins for debugging
+
+### **Production Ready**
+- ✅ Regex patterns for flexible domain matching
+- ✅ Proper credentials handling
+- ✅ Comprehensive header support
+
+## **Security Note**
+The current configuration temporarily allows all origins (`callback(null, true)`) for debugging. Once CORS is working, you can remove this line for better security:
+
+```javascript
+// Remove this line after CORS is working:
+callback(null, true); // TEMPORARY: Allow all origins
+```
+
+## **Test Commands**
+After deployment, test with curl:
+
+```bash
+# Test preflight request
+curl -X OPTIONS https://api.tabi.mn/api/auth/send-otp \
+  -H "Origin: https://tabi.mn" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: Content-Type,Authorization" \
+  -v
+
+# Should return 200 OK with CORS headers
+```
+
+## **Expected Result**
+After deployment:
+- ✅ No more CORS errors in browser console
+- ✅ Login/OTP functionality works
+- ✅ Subscription system loads properly
+- ✅ All API calls succeed
+
+**Deploy this fix immediately to restore full functionality!**
