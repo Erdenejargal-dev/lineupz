@@ -186,6 +186,52 @@ export class ApiClient {
       body: JSON.stringify(data),
     });
   }
+
+  // Subscription methods
+  async getSubscriptionPlans() {
+    return this.request('/subscription/plans');
+  }
+
+  async getCurrentSubscription() {
+    return this.request('/subscription/current');
+  }
+
+  async requestUpgrade(plan, paymentMethod, bankTransactionId) {
+    return this.request('/subscription/upgrade', {
+      method: 'POST',
+      body: JSON.stringify({ plan, paymentMethod, bankTransactionId }),
+    });
+  }
+
+  async cancelSubscription(cancelAtPeriodEnd = true) {
+    return this.request('/subscription/cancel', {
+      method: 'POST',
+      body: JSON.stringify({ cancelAtPeriodEnd }),
+    });
+  }
+
+  async getUsageStats() {
+    return this.request('/subscription/usage');
+  }
+
+  async checkLimits(action) {
+    return this.request(`/subscription/check/${action}`);
+  }
+
+  // Admin subscription methods
+  async getAllSubscriptions(page = 1, limit = 20, status, plan) {
+    const params = new URLSearchParams({ page, limit });
+    if (status) params.append('status', status);
+    if (plan) params.append('plan', plan);
+    return this.request(`/subscription/admin/all?${params}`);
+  }
+
+  async approveSubscription(subscriptionId, approved, notes) {
+    return this.request(`/subscription/admin/${subscriptionId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ approved, notes }),
+    });
+  }
 }
 
 // Export singleton instance
