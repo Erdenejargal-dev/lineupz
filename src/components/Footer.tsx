@@ -47,12 +47,17 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Business & Legal */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
-              Legal
+              Business
             </h3>
             <ul className="space-y-2">
+              <li>
+                <Link href="/business/register" className="text-sm text-purple-600 hover:text-purple-800 transition-colors font-medium">
+                  Business Register
+                </Link>
+              </li>
               <li>
                 <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
                   Privacy Policy

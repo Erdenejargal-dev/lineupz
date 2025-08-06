@@ -41,12 +41,25 @@ const userSchema = new mongoose.Schema({
     default: false
   },
   
-  // Creator-specific fields
-  businessName: String,
-  businessDescription: String,
-  businessAddress: String,
-  businessWebsite: String,
-  businessCategory: String,
+  // Business Affiliation
+  businessAffiliation: {
+    business: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Business'
+    },
+    role: {
+      type: String,
+      enum: ['owner', 'manager', 'artist', 'staff'],
+      default: 'artist'
+    },
+    joinedAt: Date,
+    isActive: {
+      type: Boolean,
+      default: true
+    }
+  },
+  
+  // Creator status (individual or business-affiliated)
   isCreator: {
     type: Boolean,
     default: false

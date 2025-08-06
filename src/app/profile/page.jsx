@@ -17,26 +17,42 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    businessName: '',
-    businessDescription: '',
-    businessAddress: '',
-    businessCategory: '',
-    businessWebsite: ''
+    phone: ''
   });
 
-  const businessCategories = [
-    'Healthcare & Medical',
-    'Beauty & Wellness',
-    'Professional Services',
-    'Education & Training',
-    'Food & Dining',
-    'Retail & Shopping',
-    'Automotive',
-    'Home Services',
-    'Entertainment',
-    'Other'
-  ];
+  const [businessData, setBusinessData] = useState({
+    ownedBusiness: null,
+    affiliatedBusiness: null
+  });
+
+  const [businessForm, setBusinessForm] = useState({
+    businessName: ''
+  });
+
+  const [showJoinBusiness, setShowJoinBusiness] = useState(false);
+  const [joiningBusiness, setJoiningBusiness] = useState(false);
+
+  const fetchBusinessData = async () => {
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/business/my-business`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setBusinessData({
+          ownedBusiness: data.ownedBusiness,
+          affiliatedBusiness: data.affiliatedBusiness
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching business data:', error);
+    }
+  };
 
   useEffect(() => {
     setIsClient(true);
@@ -51,19 +67,25 @@ export default function ProfilePage() {
         setFormData({
           name: parsedUser.name || '',
           email: parsedUser.email || '',
-          phone: parsedUser.phone || '',
-          businessName: parsedUser.businessName || '',
-          businessDescription: parsedUser.businessDescription || '',
-          businessAddress: parsedUser.businessAddress || '',
-          businessCategory: parsedUser.businessCategory || '',
-          businessWebsite: parsedUser.businessWebsite || ''
+          phone: parsedUser.phone || ''
         });
       } catch (e) {
         console.error('Error parsing user:', e);
       }
     }
+    
+    if (savedToken) {
+      fetchBusinessData();
+    }
+    
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (token) {
+      fetchBusinessData();
+    }
+  }, [token]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -234,85 +256,151 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Creator Section */}
-        {user?.isCreator ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Building className="h-6 w-6 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">Business Information</h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.businessName}
-                  onChange={(e) => handleInputChange('businessName', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Your business name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
-                </label>
-                <select
-                  value={formData.businessCategory}
-                  onChange={(e) => handleInputChange('businessCategory', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select a category</option>
-                  {businessCategories.map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Address
-                </label>
-                <input
-                  type="text"
-                  value={formData.businessAddress}
-                  onChange={(e) => handleInputChange('businessAddress', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="123 Business St, City, State"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Website
-                </label>
-                <input
-                  type="url"
-                  value={formData.businessWebsite}
-                  onChange={(e) => handleInputChange('businessWebsite', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://yourbusiness.com"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={formData.businessDescription}
-                  onChange={(e) => handleInputChange('businessDescription', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows="3"
-                  placeholder="Brief description of your business"
-                />
-              </div>
-            </div>
+        {/* Business Affiliation Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Building className="h-6 w-6 text-blue-600" />
+            <h2 className="text-xl font-semibold text-gray-900">Business Affiliation</h2>
           </div>
-        ) : (
+
+          {/* Current Business Status */}
+          {businessData.ownedBusiness ? (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+              <h3 className="font-medium text-green-900 mb-2">🏢 Business Owner</h3>
+              <p className="text-green-800">
+                You own <strong>{businessData.ownedBusiness.name}</strong>
+              </p>
+              <button
+                onClick={() => window.location.href = `/business/${businessData.ownedBusiness.id}/dashboard`}
+                className="mt-2 text-green-700 hover:text-green-900 underline text-sm"
+              >
+                Manage Business →
+              </button>
+            </div>
+          ) : businessData.affiliatedBusiness ? (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+              <h3 className="font-medium text-blue-900 mb-2">👨‍💼 Business Artist</h3>
+              <p className="text-blue-800">
+                You work at <strong>{businessData.affiliatedBusiness.name}</strong> as {businessData.affiliatedBusiness.role}
+              </p>
+            </div>
+          ) : (
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-4">
+              <h3 className="font-medium text-gray-900 mb-2">🔍 No Business Affiliation</h3>
+              <p className="text-gray-700">
+                You can either register your own business or join an existing business as an artist.
+              </p>
+            </div>
+          )}
+
+          {/* Business Options */}
+          <div className="space-y-4">
+            {/* Register Business Option */}
+            {!businessData.ownedBusiness && (
+              <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
+                <h3 className="font-medium text-purple-900 mb-2">🚀 Register Your Business</h3>
+                <p className="text-purple-800 text-sm mb-3">
+                  Start your own business with professional plans and manage multiple artists.
+                </p>
+                <button
+                  onClick={() => window.location.href = '/business/register'}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                >
+                  Register Business
+                </button>
+              </div>
+            )}
+
+            {/* Join Business Option */}
+            {!businessData.affiliatedBusiness && (
+              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                <h3 className="font-medium text-blue-900 mb-2">👥 Join a Business</h3>
+                <p className="text-blue-800 text-sm mb-3">
+                  Work as an artist for an existing business and share their subscription plan.
+                </p>
+                
+                {!showJoinBusiness ? (
+                  <button
+                    onClick={() => setShowJoinBusiness(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    Join Business
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-blue-900 mb-1">
+                        Business Name
+                      </label>
+                      <input
+                        type="text"
+                        value={businessForm.businessName}
+                        onChange={(e) => setBusinessForm({ businessName: e.target.value })}
+                        className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter the exact business name"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          try {
+                            setJoiningBusiness(true);
+                            const response = await fetch(`${API_BASE_URL}/business/join`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                              },
+                              body: JSON.stringify({ businessName: businessForm.businessName })
+                            });
+
+                            const data = await response.json();
+                            if (response.ok) {
+                              setSuccess('Successfully joined business! You can now create lines.');
+                              setShowJoinBusiness(false);
+                              setBusinessForm({ businessName: '' });
+                              // Refresh business data
+                              fetchBusinessData();
+                            } else {
+                              setError(data.message || 'Failed to join business');
+                            }
+                          } catch (error) {
+                            setError('Failed to join business');
+                          } finally {
+                            setJoiningBusiness(false);
+                          }
+                        }}
+                        disabled={joiningBusiness || !businessForm.businessName}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm flex items-center gap-2"
+                      >
+                        {joiningBusiness ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            Joining...
+                          </>
+                        ) : (
+                          'Join Business'
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowJoinBusiness(false);
+                          setBusinessForm({ businessName: '' });
+                        }}
+                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Individual Creator Option */}
+        {!user?.isCreator && !businessData.ownedBusiness && !businessData.affiliatedBusiness && (
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6">
             <div className="flex items-center gap-3 mb-4">
               <Building className="h-6 w-6 text-blue-600" />
