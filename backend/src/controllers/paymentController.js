@@ -52,10 +52,11 @@ class PaymentController {
         cancelUrl
       });
 
-      // Update payment with BYL data
-      payment.bylCheckoutId = bylResponse.data.id;
+      // Update payment with BYL data - handle response structure
+      const checkoutData = bylResponse.data || bylResponse;
+      payment.bylCheckoutId = checkoutData.id;
       payment.bylData = {
-        checkoutUrl: bylResponse.data.url,
+        checkoutUrl: checkoutData.url,
         bylProjectId: process.env.BYL_PROJECT_ID
       };
       await payment.save();
@@ -66,7 +67,7 @@ class PaymentController {
           id: payment._id,
           amount: payment.amount,
           status: payment.status,
-          checkoutUrl: bylResponse.data.url
+          checkoutUrl: checkoutData.url
         }
       });
 
@@ -124,10 +125,11 @@ class PaymentController {
         cancelUrl
       });
 
-      // Update payment with BYL data
-      payment.bylCheckoutId = bylResponse.data.id;
+      // Update payment with BYL data - handle response structure
+      const checkoutData = bylResponse.data || bylResponse;
+      payment.bylCheckoutId = checkoutData.id;
       payment.bylData = {
-        checkoutUrl: bylResponse.data.url,
+        checkoutUrl: checkoutData.url,
         bylProjectId: process.env.BYL_PROJECT_ID
       };
       await payment.save();
@@ -138,7 +140,7 @@ class PaymentController {
           id: payment._id,
           amount: payment.amount,
           status: payment.status,
-          checkoutUrl: bylResponse.data.url
+          checkoutUrl: checkoutData.url
         }
       });
 
@@ -180,12 +182,13 @@ class PaymentController {
         autoAdvance: true
       });
 
-      // Update payment with BYL data
-      payment.bylInvoiceId = bylResponse.data.id;
+      // Update payment with BYL data - handle response structure
+      const invoiceData = bylResponse.data || bylResponse;
+      payment.bylInvoiceId = invoiceData.id;
       payment.bylData = {
-        invoiceNumber: bylResponse.data.number,
-        invoiceUrl: bylResponse.data.url,
-        dueDate: new Date(bylResponse.data.due_date),
+        invoiceNumber: invoiceData.number,
+        invoiceUrl: invoiceData.url,
+        dueDate: new Date(invoiceData.due_date),
         bylProjectId: process.env.BYL_PROJECT_ID
       };
       await payment.save();
@@ -196,8 +199,8 @@ class PaymentController {
           id: payment._id,
           amount: payment.amount,
           status: payment.status,
-          invoiceUrl: bylResponse.data.url,
-          invoiceNumber: bylResponse.data.number
+          invoiceUrl: invoiceData.url,
+          invoiceNumber: invoiceData.number
         }
       });
 

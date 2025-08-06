@@ -105,7 +105,7 @@ reviewSchema.index({ rating: 1 });
 // Calculate average rating for a business
 reviewSchema.statics.getBusinessAverageRating = async function(businessId) {
   const result = await this.aggregate([
-    { $match: { business: businessId, status: 'active' } },
+    { $match: { business: new mongoose.Types.ObjectId(businessId), status: 'active' } },
     {
       $group: {
         _id: null,

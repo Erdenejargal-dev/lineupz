@@ -34,8 +34,18 @@ class BylService {
     }
 
     try {
+      console.log('BYL API Request:', method, url, data);
       const response = await fetch(url, options);
-      const result = await response.json();
+      
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse BYL API response as JSON:', parseError);
+        throw new Error(`BYL API returned invalid JSON: ${response.status}`);
+      }
+      
+      console.log('BYL API Response:', response.status, result);
       
       if (!response.ok) {
         throw new Error(`BYL API Error: ${response.status} - ${JSON.stringify(result)}`);
