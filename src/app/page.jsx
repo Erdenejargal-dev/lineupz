@@ -354,6 +354,33 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Join Line Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Join a Line Now
+            </h2>
+            <p className="text-xl text-gray-600 mb-8">
+              Have a 6-digit line code? Join instantly and skip the wait!
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <QuickJoinForm />
+          </div>
+
+          <div className="text-center mt-8">
+            <p className="text-gray-600 mb-4">
+              Don't have a line code? 
+            </p>
+            <Link href="/join" className="text-blue-600 hover:text-blue-800 font-semibold">
+              Visit our full join page →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA Section - Dark */}
       <section className="py-20 bg-gray-900 text-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
