@@ -89,6 +89,7 @@ const registerBusiness = async (req, res) => {
       subscription: {
         plan,
         maxArtists: planDetails.maxArtists,
+        maxLinesPerArtist: planDetails.maxLinesPerArtist,
         price: planDetails.price,
         endDate,
         isActive: false // Will be activated after payment
