@@ -37,7 +37,7 @@ const lineSchema = new mongoose.Schema({
     default: 'queue'
   },
   
-  // NEW: Pricing settings for paid services
+  // NEW: Simplified pricing settings for paid services
   pricing: {
     isPaid: {
       type: Boolean,
@@ -57,28 +57,6 @@ const lineSchema = new mongoose.Schema({
         },
         message: 'Price must be greater than 0 for paid services'
       }
-    },
-    currency: {
-      type: String,
-      enum: ['MNT', 'USD', 'EUR'],
-      default: 'MNT'
-    },
-    paymentMethods: [{
-      type: String,
-      enum: ['byl', 'cash', 'card', 'bank_transfer'],
-      default: 'byl'
-    }],
-    description: {
-      type: String,
-      trim: true,
-      maxlength: [200, 'Price description cannot exceed 200 characters']
-    },
-    // For appointments: per appointment price
-    // For queue: per service price
-    priceType: {
-      type: String,
-      enum: ['per_service', 'per_appointment', 'per_hour'],
-      default: 'per_service'
     }
   },
   
