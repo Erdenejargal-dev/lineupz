@@ -15,6 +15,28 @@ export default function Home() {
       {/* Hero Section - Lawcus Style */}
       <main ref={heroRef} className="pt-20 bg-white">
         <div className="max-w-7xl mx-auto px-6 py-20">
+          {/* Join Line Section - First Thing Visible */}
+          <div className="text-center mb-20">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl p-8 mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Join a Line Now
+              </h2>
+              <p className="text-lg text-gray-600 mb-8">
+                Have a 6-digit line code? Join instantly and skip the wait!
+              </p>
+              
+              <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md mx-auto">
+                <QuickJoinForm />
+              </div>
+              
+              <div className="mt-6">
+                <Link href="/join" className="text-blue-600 hover:text-blue-800 font-semibold">
+                  Need more options? Visit our full join page →
+                </Link>
+              </div>
+            </div>
+          </div>
+
           <div className="text-center mb-16">
             {/* Main Headline */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
@@ -354,32 +376,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Join Line Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Join a Line Now
-            </h2>
-            <p className="text-xl text-gray-600 mb-8">
-              Have a 6-digit line code? Join instantly and skip the wait!
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <QuickJoinForm />
-          </div>
-
-          <div className="text-center mt-8">
-            <p className="text-gray-600 mb-4">
-              Don't have a line code? 
-            </p>
-            <Link href="/join" className="text-blue-600 hover:text-blue-800 font-semibold">
-              Visit our full join page →
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Final CTA Section - Dark */}
       <section className="py-20 bg-gray-900 text-white">
