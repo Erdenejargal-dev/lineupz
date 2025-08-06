@@ -75,14 +75,17 @@ async function handleCheckoutCompleted(checkout) {
       customer_email: customerEmail,
       amount_total: amount,
       payment_method: paymentMethod,
-      status
+      status,
+      metadata
     } = checkout;
 
-    // Here you would typically:
-    // 1. Update subscription status in database
-    // 2. Send confirmation email
-    // 3. Activate user's plan
-    
+    // Check if this is a business registration payment
+    if (metadata && metadata.type === 'business_registration') {
+      await handleBusinessRegistrationPayment(checkout);
+      return;
+    }
+
+    // Handle regular subscription payments
     console.log('Checkout completed successfully:', {
       checkoutId,
       subscriptionId,
@@ -97,6 +100,48 @@ async function handleCheckoutCompleted(checkout) {
     
   } catch (error) {
     console.error('Error handling checkout completion:', error);
+    throw error;
+  }
+}
+
+// Handle business registration payment
+async function handleBusinessRegistrationPayment(checkout) {
+  try {
+    console.log('Processing business registration payment:', checkout.id);
+    
+    const {
+      id: checkoutId,
+      customer_email: customerEmail,
+      amount_total: amount,
+      metadata
+    } = checkout;
+
+    const { businessData, plan, userId } = metadata;
+
+    // Here you would typically:
+    // 1. Create business record in database
+    // 2. Associate business with user
+    // 3. Set up business subscription
+    // 4. Send confirmation email
+    // 5. Grant business privileges
+
+    console.log('Business registration payment completed:', {
+      checkoutId,
+      customerEmail,
+      amount,
+      businessName: businessData?.name,
+      plan,
+      userId
+    });
+
+    // For now, we'll log the successful business registration
+    // When backend business routes are re-enabled, this will:
+    // - Call backend API to create business
+    // - Set up business subscription
+    // - Send welcome email
+    
+  } catch (error) {
+    console.error('Error handling business registration payment:', error);
     throw error;
   }
 }

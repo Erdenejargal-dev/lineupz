@@ -118,28 +118,45 @@ export default function BusinessRegisterPage() {
     setSuccess('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/business/register`, {
+      // Get selected plan details
+      const selectedPlanDetails = plans[selectedPlan];
+      if (!selectedPlanDetails) {
+        setError('Please select a valid plan');
+        setSubmitting(false);
+        return;
+      }
+
+      // Create BYL payment directly
+      const response = await fetch('/api/byl-checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ...formData,
-          plan: selectedPlan
+          amount: selectedPlanDetails.price,
+          description: `Business Registration - ${selectedPlanDetails.name}`,
+          metadata: {
+            type: 'business_registration',
+            businessData: formData,
+            plan: selectedPlan,
+            userId: user?.id || null
+          },
+          successUrl: `/business/payment/success`,
+          cancelUrl: `/business/payment/cancel`
         })
       });
 
       const data = await response.json();
       
-      if (response.ok) {
+      if (data.success && data.paymentUrl) {
         // Redirect to BYL payment
         window.location.href = data.paymentUrl;
       } else {
-        setError(data.message || 'Failed to register business');
+        setError(data.message || 'Failed to create payment');
       }
     } catch (error) {
-      setError('Failed to register business');
+      console.error('Payment creation error:', error);
+      setError('Failed to create payment');
     } finally {
       setSubmitting(false);
     }
