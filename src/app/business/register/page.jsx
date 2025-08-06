@@ -142,8 +142,30 @@ export default function BusinessRegisterPage() {
         return;
       }
 
-      // Show message that business system is temporarily unavailable
-      setError('Business registration is temporarily unavailable while we update our systems. Please try again later or contact support.');
+      // Create business record first (without payment)
+      const businessData = {
+        ...formData,
+        plan: selectedPlan,
+        planDetails: selectedPlanDetails,
+        status: 'pending_payment',
+        userId: user?.id,
+        createdAt: new Date().toISOString()
+      };
+
+      // Store business data locally (simulating database creation)
+      const businessId = 'business_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('createdBusiness', JSON.stringify({
+        id: businessId,
+        ...businessData
+      }));
+
+      // Show success message and redirect to payment
+      setSuccess('Business registered successfully! Redirecting to payment...');
+      
+      setTimeout(() => {
+        // Redirect to BYL payment using frontend API
+        window.location.href = `/api/byl-checkout?amount=${selectedPlanDetails.price}&description=Business Registration - ${selectedPlanDetails.name}&businessId=${businessId}&successUrl=/business/payment/success&cancelUrl=/business/payment/cancel`;
+      }, 2000);
       
     } catch (error) {
       console.error('Business registration error:', error);
