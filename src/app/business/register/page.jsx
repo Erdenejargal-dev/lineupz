@@ -147,46 +147,46 @@ export default function BusinessRegisterPage() {
       setSuccess('Business registered successfully! Redirecting to payment...');
       
       setTimeout(() => {
-        // Use the backend subscription endpoint like pricing page does
+        // Use the backend business registration endpoint
         const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
         
-        fetch(`${API_BASE_URL}/subscription/create`, {
+        fetch(`${API_BASE_URL}/business/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token || ''}`
           },
           body: JSON.stringify({
-            plan: selectedPlan,
-            type: 'business_registration',
-            businessData: formData,
-            businessId: businessId
+            name: formData.name,
+            description: formData.description,
+            category: formData.category,
+            contact: formData.contact,
+            plan: selectedPlan
           })
         })
         .then(response => response.json())
         .then(data => {
-          if (data.success && data.checkoutUrl) {
+          if (data.success && data.paymentUrl) {
             // Store business registration info for success page
             localStorage.setItem('pendingBusinessRegistration', JSON.stringify({
-              id: data.subscription?._id,
+              id: data.business.id,
               plan: selectedPlan,
               planName: selectedPlanDetails.name,
               amount: selectedPlanDetails.price,
               businessData: formData,
-              businessId: businessId,
               timestamp: Date.now()
             }));
             
-            // Redirect to BYL checkout
-            window.location.href = data.checkoutUrl;
+            // Redirect to BYL payment
+            window.location.href = data.paymentUrl;
           } else {
-            setError(data.message || data.error || 'Failed to create business registration payment');
+            setError(data.message || 'Failed to register business');
             setSubmitting(false);
           }
         })
         .catch(error => {
-          console.error('Payment creation error:', error);
-          setError('Failed to create payment. Please try again.');
+          console.error('Business registration error:', error);
+          setError('Failed to register business. Please try again.');
           setSubmitting(false);
         });
       }, 1500);

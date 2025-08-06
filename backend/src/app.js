@@ -88,7 +88,7 @@ app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/google-calendar', require('./routes/googleCalendar'));
 app.use('/api/subscription', require('./routes/subscription'));
-// app.use('/api/business', require('./routes/business'));
+app.use('/api/business', require('./routes/business'));
 // Temporarily disabled reviews route due to loading issues
 // app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/payments', require('./routes/payments'));
