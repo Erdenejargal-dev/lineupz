@@ -1,5 +1,13 @@
 const crypto = require('crypto');
 
+// Use node-fetch for older Node.js versions, or built-in fetch for Node.js 18+
+let fetch;
+try {
+  fetch = globalThis.fetch;
+} catch (e) {
+  fetch = require('node-fetch');
+}
+
 class BylService {
   constructor() {
     this.apiUrl = process.env.BYL_API_URL || 'https://byl.mn/api/v1';
