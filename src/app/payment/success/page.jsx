@@ -15,7 +15,7 @@ function PaymentSuccessContent() {
   const ref = searchParams.get('ref');
 
   useEffect(() => {
-    const fetchPaymentDetails = async () => {
+    const fetchPaymentDetailsAndVerifyPlan = async () => {
       if (!ref) {
         setLoading(false);
         return;
@@ -23,16 +23,58 @@ function PaymentSuccessContent() {
 
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/${ref}`, {
+        
+        // Fetch payment details
+        const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/${ref}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setPaymentDetails(data.payment);
+        if (paymentResponse.ok) {
+          const paymentData = await paymentResponse.json();
+          setPaymentDetails(paymentData.payment);
+          
+          // If this is a subscription payment, verify and activate the plan
+          if (type === 'subscription' && paymentData.payment?.status === 'completed') {
+            try {
+              // Get the plan from URL params or payment details
+              const plan = searchParams.get('plan') || paymentData.payment?.metadata?.plan;
+              
+              if (plan) {
+                // Verify and activate the subscription
+                const subscriptionResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/verify-payment`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    paymentRef: ref,
+                    plan: plan
+                  })
+                });
+
+                if (subscriptionResponse.ok) {
+                  const subscriptionData = await subscriptionResponse.json();
+                  console.log('Subscription activated:', subscriptionData);
+                  
+                  // Update payment details with subscription info
+                  setPaymentDetails(prev => ({
+                    ...prev,
+                    subscriptionActivated: true,
+                    activatedPlan: plan,
+                    subscriptionDetails: subscriptionData.subscription
+                  }));
+                } else {
+                  console.error('Failed to activate subscription');
+                }
+              }
+            } catch (subscriptionError) {
+              console.error('Error activating subscription:', subscriptionError);
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching payment details:', error);
@@ -41,8 +83,8 @@ function PaymentSuccessContent() {
       }
     };
 
-    fetchPaymentDetails();
-  }, [ref]);
+    fetchPaymentDetailsAndVerifyPlan();
+  }, [ref, type, searchParams]);
 
   const getSuccessMessage = () => {
     switch (type) {

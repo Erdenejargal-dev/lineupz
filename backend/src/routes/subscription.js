@@ -24,6 +24,9 @@ router.post('/cancel', auth.authenticateToken, cancelSubscription);
 router.get('/usage', auth.authenticateToken, getUsageStats);
 router.get('/check/:action', auth.authenticateToken, checkLimits);
 
+// Payment verification route
+router.post('/verify-payment', auth.authenticateToken, require('../controllers/subscriptionController').verifyPaymentAndActivate);
+
 // Admin routes
 router.get('/admin/all', auth.authenticateToken, getAllSubscriptions);
 router.post('/admin/:subscriptionId/approve', auth.authenticateToken, approveUpgrade);

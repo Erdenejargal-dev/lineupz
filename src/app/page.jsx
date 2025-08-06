@@ -94,56 +94,123 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Hero Section - Keep Original */}
-      <main ref={heroRef} className="relative flex-1 flex flex-col justify-center items-center text-center px-4 min-h-screen overflow-hidden">
-        <div className="hero-bg absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 opacity-10 -z-10"></div>
-        
-        {/* Floating elements for visual interest */}
-        <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-32 right-16 w-16 h-16 bg-gradient-to-r from-pink-400 to-red-500 rounded-full opacity-20 animate-bounce"></div>
-        <div className="absolute top-1/3 right-20 w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-full opacity-20 animate-pulse"></div>
-        
-        <div className="mb-12 relative z-10">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-full text-sm font-semibold mb-8 shadow-lg">
-            <Zap className="w-4 h-4" />
-            Smart Queue Management
-          </div>
-          
-          <SplitText className="text-6xl md:text-8xl text-slate-900 tracking-tight font-bold mb-6 bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-            Let's get in queue
-          </SplitText>
-          <SplitText className="text-2xl md:text-3xl text-slate-600 font-medium mb-8">
-            Save your time. Skip the wait.
-          </SplitText>
-          
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <span className="text-slate-700 font-medium">Real-time Updates</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
-              <MapPin className="w-5 h-5 text-blue-500" />
-              <span className="text-slate-700 font-medium">Location Based</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
-              <Bell className="w-5 h-5 text-purple-500" />
-              <span className="text-slate-700 font-medium">Smart Notifications</span>
-            </div>
-          </div>
+      {/* Modern Hero Section */}
+      <main ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-pink-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-blue-300/10 to-purple-300/10 rounded-full blur-3xl animate-pulse delay-500"></div>
         </div>
-        
-        <div className="relative z-10 mb-8">
-          <QuickJoinForm />
-        </div>
-        
-        <div className="relative z-10">
-          <Link 
-            href="/dashboard" 
-            className="inline-flex items-center gap-2 text-slate-700 hover:text-blue-600 text-lg font-semibold transition-all duration-300 hover:scale-105 group"
-          >
-            Create your own queue
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-20">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="text-left">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold mb-8 shadow-lg">
+                <Zap className="w-4 h-4" />
+                Next-Gen Queue Management
+              </div>
+              
+              <h1 className="text-5xl md:text-7xl font-bold text-slate-900 mb-6 leading-tight">
+                Skip the wait,
+                <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  embrace efficiency
+                </span>
+              </h1>
+              
+              <p className="text-xl text-slate-600 mb-8 leading-relaxed max-w-lg">
+                Transform your business with intelligent queue management. Real-time updates, smart notifications, and seamless customer experiences.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 mb-12">
+                <Link href="/creator-dashboard">
+                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                    Start Free Trial
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button variant="outline" className="border-2 border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:scale-105">
+                    Join a Queue
+                    <Users className="w-5 h-5 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-slate-900 mb-1">10K+</div>
+                  <div className="text-sm text-slate-600">Active Users</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-slate-900 mb-1">500+</div>
+                  <div className="text-sm text-slate-600">Businesses</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-slate-900 mb-1">99.9%</div>
+                  <div className="text-sm text-slate-600">Uptime</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Content - Interactive Demo */}
+            <div className="relative">
+              <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-slate-200">
+                <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+                  <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                </div>
+                
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Quick Join Demo</h3>
+                  <p className="text-slate-600 text-sm">Experience our queue system in action</p>
+                </div>
+                
+                <QuickJoinForm />
+                
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <div className="flex items-center justify-between text-sm text-slate-600 mb-3">
+                    <span>Current queue status</span>
+                    <span className="text-green-600 font-semibold">Live</span>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">1</div>
+                      <div className="flex-1">
+                        <div className="font-medium text-slate-900">Dr. Smith's Clinic</div>
+                        <div className="text-sm text-slate-600">3 people ahead • ~15 min wait</div>
+                      </div>
+                      <div className="text-green-600 text-sm font-semibold">Active</div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg opacity-60">
+                      <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
+                      <div className="flex-1">
+                        <div className="font-medium text-slate-900">Bella's Salon</div>
+                        <div className="text-sm text-slate-600">7 people ahead • ~30 min wait</div>
+                      </div>
+                      <div className="text-slate-500 text-sm">Waiting</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Floating notification */}
+              <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-4 border border-slate-200 animate-bounce">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+                    <Bell className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-900 text-sm">Your turn is next!</div>
+                    <div className="text-xs text-slate-600">Dr. Smith's Clinic</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
 

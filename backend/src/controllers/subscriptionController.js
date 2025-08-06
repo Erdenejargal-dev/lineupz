@@ -339,6 +339,91 @@ const createSubscription = async (req, res) => {
   }
 };
 
+// Verify payment and activate subscription
+const verifyPaymentAndActivate = async (req, res) => {
+  try {
+    const { paymentRef, plan } = req.body;
+    const userId = req.user.id;
+
+    if (!paymentRef || !plan) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment reference and plan are required'
+      });
+    }
+
+    // Get plan details
+    const plans = {
+      free: { name: 'Free', price: 0, limits: { maxQueues: 1, maxCustomersPerMonth: 50 } },
+      basic: { name: 'Basic', price: 69000, limits: { maxQueues: 5, maxCustomersPerMonth: 500 } },
+      pro: { name: 'Pro', price: 150000, limits: { maxQueues: -1, maxCustomersPerMonth: 5000 } },
+      enterprise: { name: 'Enterprise', price: 290000, limits: { maxQueues: -1, maxCustomersPerMonth: -1 } }
+    };
+
+    const planConfig = plans[plan];
+    if (!planConfig) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid plan selected'
+      });
+    }
+
+    // Create activated subscription
+    const subscription = {
+      _id: `sub_${Date.now()}_${userId}`,
+      userId: { 
+        _id: userId, 
+        email: req.user.email 
+      },
+      plan,
+      planConfig,
+      status: 'active',
+      paymentRef,
+      activatedAt: new Date(),
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    console.log('Subscription activated:', {
+      userId,
+      plan,
+      paymentRef,
+      subscriptionId: subscription._id
+    });
+
+    res.json({
+      success: true,
+      message: 'Subscription activated successfully',
+      subscription,
+      planDetails: {
+        name: planConfig.name,
+        limits: planConfig.limits,
+        features: getFeaturesByPlan(plan)
+      }
+    });
+
+  } catch (error) {
+    console.error('Error verifying payment and activating subscription:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to activate subscription'
+    });
+  }
+};
+
+// Helper function to get features by plan
+const getFeaturesByPlan = (plan) => {
+  const features = {
+    free: ['1 queue', '50 customers/month', 'Basic support'],
+    basic: ['5 queues', '500 customers/month', 'SMS notifications', 'Email support'],
+    pro: ['Unlimited queues', '5000 customers/month', 'All features', 'Priority support'],
+    enterprise: ['Everything unlimited', 'Priority support', 'Custom integrations', 'Dedicated account manager']
+  };
+  
+  return features[plan] || features.free;
+};
+
 // Update usage (called internally)
 const updateUsage = async (userId, type, increment = 1) => {
   try {
@@ -359,5 +444,6 @@ module.exports = {
   getUsageStats,
   checkLimits,
   getAllSubscriptions,
-  updateUsage
+  updateUsage,
+  verifyPaymentAndActivate
 };
