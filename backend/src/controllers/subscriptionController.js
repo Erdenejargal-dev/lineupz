@@ -232,25 +232,103 @@ const createSubscription = async (req, res) => {
       });
     }
 
-    // Create subscription object (simplified for BYL integration)
-    const subscription = {
-      _id: `sub_${Date.now()}_${userId}`,
-      userId: { 
-        _id: userId, 
-        email: req.user.email 
-      },
-      plan,
-      planConfig,
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    // For free plan, create subscription directly
+    if (plan === 'free') {
+      const subscription = {
+        _id: `sub_${Date.now()}_${userId}`,
+        userId: { 
+          _id: userId, 
+          email: req.user.email 
+        },
+        plan,
+        planConfig,
+        status: 'active',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-    res.json({
-      success: true,
-      subscription,
-      message: 'Subscription created successfully'
-    });
+      return res.json({
+        success: true,
+        subscription,
+        message: 'Free subscription activated successfully'
+      });
+    }
+
+    // For paid plans, create BYL payment
+    try {
+      const bylService = require('../services/bylService');
+      
+      console.log('Creating BYL checkout for subscription:', { plan, userId, price: planConfig.price });
+      
+      const checkoutData = {
+        items: [{
+          price_data: {
+            unit_amount: planConfig.price,
+            product_data: {
+              name: `Tabi ${planConfig.name} Subscription`,
+              client_reference_id: `subscription-${plan}-${userId}`
+            }
+          },
+          quantity: 1
+        }],
+        success_url: `${process.env.FRONTEND_URL || 'https://tabi.mn'}/payment/success?type=subscription&plan=${plan}`,
+        cancel_url: `${process.env.FRONTEND_URL || 'https://tabi.mn'}/payment/cancel?type=subscription&plan=${plan}`,
+        customer_email: req.user.email,
+        client_reference_id: `subscription-${plan}-${userId}-${Date.now()}`,
+        phone_number_collection: true,
+        delivery_address_collection: false
+      };
+
+      console.log('BYL checkout data:', JSON.stringify(checkoutData, null, 2));
+
+      const bylResponse = await bylService.createCheckout(checkoutData);
+      console.log('BYL response:', JSON.stringify(bylResponse, null, 2));
+
+      // Handle both nested and direct response structures
+      const checkoutResult = bylResponse.data || bylResponse;
+      const checkoutId = checkoutResult.id;
+      const checkoutUrl = checkoutResult.url;
+
+      if (!checkoutId || !checkoutUrl) {
+        console.error('Invalid BYL response structure:', bylResponse);
+        throw new Error('Invalid checkout response from BYL');
+      }
+
+      // Create subscription object with payment info
+      const subscription = {
+        _id: `sub_${Date.now()}_${userId}`,
+        userId: { 
+          _id: userId, 
+          email: req.user.email 
+        },
+        plan,
+        planConfig,
+        status: 'pending_payment',
+        bylCheckoutId: checkoutId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      console.log('Subscription created with BYL checkout:', { subscriptionId: subscription._id, checkoutId, checkoutUrl });
+
+      res.json({
+        success: true,
+        subscription,
+        checkoutUrl,
+        checkoutId,
+        message: 'Subscription created successfully. Please complete payment.'
+      });
+
+    } catch (bylError) {
+      console.error('BYL integration error:', bylError);
+      console.error('BYL error stack:', bylError.stack);
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to create BYL checkout',
+        error: bylError.message
+      });
+    }
 
   } catch (error) {
     console.error('Error creating subscription:', error);
