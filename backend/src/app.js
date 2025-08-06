@@ -89,6 +89,7 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/google-calendar', require('./routes/googleCalendar'));
 app.use('/api/subscription', require('./routes/subscription'));
 app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/payments', require('./routes/payments'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

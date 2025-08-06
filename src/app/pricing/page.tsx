@@ -39,14 +39,70 @@ export default function PricingPage() {
     }
   };
 
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = async (planId: string) => {
     if (planId === 'free') {
       toast.info('You are already on the free plan!');
       return;
     }
     
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please login to continue');
+      window.location.href = '/login';
+      return;
+    }
+
     setSelectedPlan(planId);
-    setShowCheckout(true);
+    setLoading(true);
+
+    try {
+      // Create subscription first
+      const subResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/create`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          plan: planId
+        })
+      });
+
+      const subData = await subResponse.json();
+      
+      if (!subData.success) {
+        throw new Error(subData.message || 'Failed to create subscription');
+      }
+
+      // Create BYL payment
+      const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/subscription`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          subscriptionId: subData.subscription._id,
+          planName: plans[planId].name,
+          amount: plans[planId].price,
+          customerEmail: subData.subscription.userId?.email
+        })
+      });
+
+      const paymentData = await paymentResponse.json();
+      
+      if (paymentData.success) {
+        // Redirect to BYL checkout
+        window.location.href = paymentData.payment.checkoutUrl;
+      } else {
+        throw new Error(paymentData.error || 'Failed to create payment');
+      }
+    } catch (error) {
+      console.error('Error creating subscription payment:', error);
+      toast.error((error as Error).message || 'Failed to process subscription');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatPrice = (price: number) => {
