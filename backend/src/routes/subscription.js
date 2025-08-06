@@ -4,6 +4,7 @@ const auth = require('../middleware/auth');
 const {
   getPlans,
   getCurrentSubscription,
+  createSubscription,
   requestUpgrade,
   approveUpgrade,
   cancelSubscription,
@@ -17,6 +18,7 @@ router.get('/plans', getPlans);
 
 // Protected routes (require authentication)
 router.get('/current', auth.authenticateToken, getCurrentSubscription);
+router.post('/create', auth.authenticateToken, createSubscription);
 router.post('/upgrade', auth.authenticateToken, requestUpgrade);
 router.post('/cancel', auth.authenticateToken, cancelSubscription);
 router.get('/usage', auth.authenticateToken, getUsageStats);

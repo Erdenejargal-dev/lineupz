@@ -203,6 +203,64 @@ const getAllSubscriptions = async (req, res) => {
   }
 };
 
+// Create a new subscription
+const createSubscription = async (req, res) => {
+  try {
+    const { plan } = req.body;
+    const userId = req.user.id;
+
+    if (!plan) {
+      return res.status(400).json({
+        success: false,
+        message: 'Plan is required'
+      });
+    }
+
+    // Get plan details
+    const plans = {
+      free: { name: 'Free', price: 0 },
+      basic: { name: 'Basic', price: 69000 },
+      pro: { name: 'Pro', price: 150000 },
+      enterprise: { name: 'Enterprise', price: 290000 }
+    };
+
+    const planConfig = plans[plan];
+    if (!planConfig) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid plan selected'
+      });
+    }
+
+    // Create subscription object (simplified for BYL integration)
+    const subscription = {
+      _id: `sub_${Date.now()}_${userId}`,
+      userId: { 
+        _id: userId, 
+        email: req.user.email 
+      },
+      plan,
+      planConfig,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    res.json({
+      success: true,
+      subscription,
+      message: 'Subscription created successfully'
+    });
+
+  } catch (error) {
+    console.error('Error creating subscription:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create subscription'
+    });
+  }
+};
+
 // Update usage (called internally)
 const updateUsage = async (userId, type, increment = 1) => {
   try {
@@ -216,6 +274,7 @@ const updateUsage = async (userId, type, increment = 1) => {
 module.exports = {
   getPlans,
   getCurrentSubscription,
+  createSubscription,
   requestUpgrade,
   approveUpgrade,
   cancelSubscription,
