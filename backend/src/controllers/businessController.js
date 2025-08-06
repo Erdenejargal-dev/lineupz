@@ -1,6 +1,6 @@
 const Business = require('../models/Business');
 const User = require('../models/User');
-const { bylService } = require('../services/bylService');
+const bylService = require('../services/bylService');
 
 // Business subscription plans
 const BUSINESS_PLANS = {
@@ -100,17 +100,13 @@ const registerBusiness = async (req, res) => {
     await business.save();
 
     // Create BYL payment for business subscription
-    const bylPayment = await bylService.createPayment({
+    const bylPayment = await bylService.createSubscriptionCheckout({
+      planName: `Business Registration - ${planDetails.name}`,
       amount: planDetails.price,
-      currency: 'MNT',
-      description: `Business Registration - ${planDetails.name}`,
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/business/payment/success?businessId=${business._id}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/business/payment/cancel?businessId=${business._id}`,
-      metadata: {
-        businessId: business._id.toString(),
-        userId: userId,
-        type: 'business_registration'
-      }
+      customerEmail: contact.email,
+      clientReferenceId: business._id.toString(),
+      successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/business/payment/success?businessId=${business._id}`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/business/payment/cancel?businessId=${business._id}`
     });
 
     res.json({
