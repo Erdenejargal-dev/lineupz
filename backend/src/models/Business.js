@@ -59,6 +59,10 @@ const businessSchema = new mongoose.Schema({
       type: Number,
       required: true
     },
+    maxLinesPerArtist: {
+      type: Number,
+      required: true
+    },
     price: {
       type: Number,
       required: true
@@ -78,6 +82,34 @@ const businessSchema = new mongoose.Schema({
     paymentId: String // BYL payment reference
   },
   
+  // Join Requests Management
+  joinRequests: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    requestedAt: {
+      type: Date,
+      default: Date.now
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'declined'],
+      default: 'pending'
+    },
+    message: {
+      type: String,
+      trim: true,
+      maxlength: 500
+    },
+    respondedAt: Date,
+    respondedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  }],
+
   // Artists/Staff Management
   artists: [{
     user: {

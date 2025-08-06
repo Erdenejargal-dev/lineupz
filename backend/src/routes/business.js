@@ -5,7 +5,9 @@ const {
   getBusinessPlans,
   registerBusiness,
   getUserBusiness,
-  joinBusiness,
+  sendJoinRequest,
+  getJoinRequests,
+  respondToJoinRequest,
   getBusinessDashboard,
   handlePaymentSuccess,
   removeArtist
@@ -20,8 +22,14 @@ router.post('/register', auth, registerBusiness);
 // Get user's business information (requires auth)
 router.get('/my-business', auth, getUserBusiness);
 
-// Join a business as an artist (requires auth)
-router.post('/join', auth, joinBusiness);
+// Send join request to business (requires auth)
+router.post('/join-request', auth, sendJoinRequest);
+
+// Get join requests for a business (requires auth)
+router.get('/:businessId/join-requests', auth, getJoinRequests);
+
+// Respond to join request (requires auth)
+router.post('/:businessId/join-requests/:requestId/respond', auth, respondToJoinRequest);
 
 // Get business dashboard data (requires auth)
 router.get('/:businessId/dashboard', auth, getBusinessDashboard);

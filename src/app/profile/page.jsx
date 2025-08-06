@@ -345,27 +345,28 @@ export default function ProfilePage() {
                         onClick={async () => {
                           try {
                             setJoiningBusiness(true);
-                            const response = await fetch(`${API_BASE_URL}/business/join`, {
+                            const response = await fetch(`${API_BASE_URL}/business/join-request`, {
                               method: 'POST',
                               headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
                               },
-                              body: JSON.stringify({ businessName: businessForm.businessName })
+                              body: JSON.stringify({ 
+                                businessName: businessForm.businessName,
+                                message: `Hi, I would like to join ${businessForm.businessName} as an artist. Please review my request.`
+                              })
                             });
 
                             const data = await response.json();
                             if (response.ok) {
-                              setSuccess('Successfully joined business! You can now create lines.');
+                              setSuccess('Join request sent successfully! The business owner will review your request and notify you via email.');
                               setShowJoinBusiness(false);
                               setBusinessForm({ businessName: '' });
-                              // Refresh business data
-                              fetchBusinessData();
                             } else {
-                              setError(data.message || 'Failed to join business');
+                              setError(data.message || 'Failed to send join request');
                             }
                           } catch (error) {
-                            setError('Failed to join business');
+                            setError('Failed to send join request');
                           } finally {
                             setJoiningBusiness(false);
                           }
@@ -376,10 +377,10 @@ export default function ProfilePage() {
                         {joiningBusiness ? (
                           <>
                             <RefreshCw className="h-4 w-4 animate-spin" />
-                            Joining...
+                            Sending Request...
                           </>
                         ) : (
-                          'Join Business'
+                          'Send Join Request'
                         )}
                       </button>
                       <button
