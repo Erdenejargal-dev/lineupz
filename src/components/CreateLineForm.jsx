@@ -12,6 +12,14 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
     maxCapacity: 50,
     estimatedServiceTime: 5,
     codeType: 'stable',
+    pricing: {
+      isPaid: false,
+      price: 0,
+      currency: 'MNT',
+      paymentMethods: ['byl'],
+      description: '',
+      priceType: 'per_service'
+    },
     appointmentSettings: {
       meetingType: 'in-person',
       location: {
@@ -116,6 +124,23 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
     if (formData.serviceType === 'appointments' || formData.serviceType === 'hybrid') {
       if (formData.appointmentSettings.duration < 5 || formData.appointmentSettings.duration > 480) {
         newErrors.appointmentDuration = 'Duration must be between 5 and 480 minutes';
+      }
+    }
+
+    // Pricing validation
+    if (formData.pricing.isPaid) {
+      if (!formData.pricing.price || formData.pricing.price <= 0) {
+        newErrors.price = 'Price must be greater than 0 for paid services';
+      } else if (formData.pricing.price > 1000000) {
+        newErrors.price = 'Price cannot exceed 1,000,000';
+      }
+
+      if (!formData.pricing.paymentMethods || formData.pricing.paymentMethods.length === 0) {
+        newErrors.paymentMethods = 'At least one payment method must be selected';
+      }
+
+      if (formData.pricing.description && formData.pricing.description.length > 200) {
+        newErrors.priceDescription = 'Price description cannot exceed 200 characters';
       }
     }
 
@@ -275,6 +300,272 @@ const CreateLineForm = ({ onClose, onSubmit, loading = false }) => {
               />
               {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
             </div>
+          </div>
+
+          {/* Pricing Settings */}
+          <div className="border border-green-200 rounded-lg p-4 bg-green-50">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">💰</span>
+              <h3 className="font-medium text-green-900">Service Pricing</h3>
+            </div>
+
+            {/* Is Paid Toggle */}
+            <div className="mb-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.pricing.isPaid}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    pricing: {
+                      ...formData.pricing,
+                      isPaid: e.target.checked,
+                      price: e.target.checked ? formData.pricing.price || 5000 : 0
+                    }
+                  })}
+                  className="mr-3 w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+                />
+                <div>
+                  <span className="font-medium text-green-900">This is a paid service</span>
+                  <p className="text-sm text-green-700">Customers will need to pay when joining/booking</p>
+                </div>
+              </label>
+            </div>
+
+            {/* Pricing Details - Only show if isPaid is true */}
+            {formData.pricing.isPaid && (
+              <div className="space-y-4 p-4 bg-white rounded-lg border border-green-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Price */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Price *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="1"
+                        max="1000000"
+                        required={formData.pricing.isPaid}
+                        value={formData.pricing.price || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          pricing: {
+                            ...formData.pricing,
+                            price: parseInt(e.target.value) || 0
+                          }
+                        })}
+                        className={`w-full pl-12 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                          errors.price ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                        placeholder="5000"
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 sm:text-sm">
+                          {formData.pricing.currency === 'MNT' ? '₮' : 
+                           formData.pricing.currency === 'USD' ? '$' : '€'}
+                        </span>
+                      </div>
+                    </div>
+                    {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
+                  </div>
+
+                  {/* Currency */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Currency
+                    </label>
+                    <select
+                      value={formData.pricing.currency}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        pricing: {
+                          ...formData.pricing,
+                          currency: e.target.value
+                        }
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value="MNT">MNT (₮) - Mongolian Tugrik</option>
+                      <option value="USD">USD ($) - US Dollar</option>
+                      <option value="EUR">EUR (€) - Euro</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Price Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Pricing Type
+                  </label>
+                  <select
+                    value={formData.pricing.priceType}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      pricing: {
+                        ...formData.pricing,
+                        priceType: e.target.value
+                      }
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="per_service">
+                      Per Service - {formData.serviceType === 'queue' ? 'Each queue join' : 
+                                   formData.serviceType === 'appointments' ? 'Each appointment' : 
+                                   'Each service'}
+                    </option>
+                    {formData.serviceType === 'appointments' && (
+                      <option value="per_hour">Per Hour - Hourly rate</option>
+                    )}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {formData.pricing.priceType === 'per_service' ? 
+                      'Customers pay once when they join/book' :
+                      'Price calculated based on appointment duration'
+                    }
+                  </p>
+                </div>
+
+                {/* Payment Methods */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Methods
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.pricing.paymentMethods.includes('byl')}
+                        onChange={(e) => {
+                          const methods = formData.pricing.paymentMethods;
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing,
+                                paymentMethods: [...methods, 'byl']
+                              }
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing,
+                                paymentMethods: methods.filter(m => m !== 'byl')
+                              }
+                            });
+                          }
+                        }}
+                        className="mr-2 text-green-600"
+                      />
+                      <span className="text-sm text-gray-700">💳 BYL Digital Payment (Recommended)</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.pricing.paymentMethods.includes('cash')}
+                        onChange={(e) => {
+                          const methods = formData.pricing.paymentMethods;
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing,
+                                paymentMethods: [...methods, 'cash']
+                              }
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing,
+                                paymentMethods: methods.filter(m => m !== 'cash')
+                              }
+                            });
+                          }
+                        }}
+                        className="mr-2 text-green-600"
+                      />
+                      <span className="text-sm text-gray-700">💵 Cash Payment</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.pricing.paymentMethods.includes('card')}
+                        onChange={(e) => {
+                          const methods = formData.pricing.paymentMethods;
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing,
+                                paymentMethods: [...methods, 'card']
+                              }
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              pricing: {
+                                ...formData.pricing,
+                                paymentMethods: methods.filter(m => m !== 'card')
+                              }
+                            });
+                          }
+                        }}
+                        className="mr-2 text-green-600"
+                      />
+                      <span className="text-sm text-gray-700">💳 Card Payment</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Price Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Price Description (Optional)
+                  </label>
+                  <textarea
+                    value={formData.pricing.description}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      pricing: {
+                        ...formData.pricing,
+                        description: e.target.value
+                      }
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    rows="2"
+                    maxLength="200"
+                    placeholder="e.g., Includes consultation and basic service. Additional charges may apply for premium options."
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    {formData.pricing.description.length}/200 characters
+                  </p>
+                </div>
+
+                {/* Pricing Preview */}
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <h4 className="font-medium text-green-900 mb-2">💡 Pricing Preview</h4>
+                  <p className="text-sm text-green-800">
+                    Customers will pay <strong>
+                      {formData.pricing.currency === 'MNT' ? '₮' : 
+                       formData.pricing.currency === 'USD' ? '$' : '€'}
+                      {formData.pricing.price?.toLocaleString() || '0'}
+                    </strong> {formData.pricing.priceType === 'per_service' ? 
+                        (formData.serviceType === 'queue' ? 'to join the queue' :
+                         formData.serviceType === 'appointments' ? 'per appointment' :
+                         'per service') :
+                        'per hour'
+                      }
+                  </p>
+                  {formData.pricing.paymentMethods.includes('byl') && (
+                    <p className="text-xs text-green-700 mt-1">
+                      ✅ BYL payments will be processed automatically
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Queue/Hybrid Settings */}
