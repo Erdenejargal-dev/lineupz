@@ -1,5 +1,6 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import OnboardingFlow from './OnboardingFlow';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
@@ -14,6 +15,22 @@ const LoginForm = () => {
   const [message, setMessage] = useState('');
   const [isSignup, setIsSignup] = useState(false);
   const [user, setUser] = useState(null);
+  const [returnTo, setReturnTo] = useState('');
+  const [action, setAction] = useState('');
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Get URL parameters
+    const returnToParam = searchParams.get('returnTo');
+    const actionParam = searchParams.get('action');
+    
+    if (returnToParam) {
+      setReturnTo(returnToParam);
+    }
+    if (actionParam) {
+      setAction(actionParam);
+    }
+  }, [searchParams]);
 
   const sendOTP = async () => {
     setLoading(true);
@@ -77,8 +94,9 @@ const LoginForm = () => {
         setUser(data.user);
         setStep('onboarding');
       } else {
-        // Redirect to dashboard for existing users who completed onboarding
-        window.location.href = '/dashboard';
+        // Redirect based on returnTo parameter or default to dashboard
+        const redirectUrl = returnTo || '/dashboard';
+        window.location.href = redirectUrl;
       }
     } catch (error) {
       setError(error.message);
@@ -98,13 +116,15 @@ const LoginForm = () => {
   };
 
   const handleOnboardingComplete = () => {
-    // Redirect to dashboard after onboarding completion
-    window.location.href = '/dashboard';
+    // Redirect based on returnTo parameter or default to dashboard
+    const redirectUrl = returnTo || '/dashboard';
+    window.location.href = redirectUrl;
   };
 
   const handleOnboardingSkip = () => {
-    // Allow users to skip onboarding and go to dashboard
-    window.location.href = '/dashboard';
+    // Redirect based on returnTo parameter or default to dashboard
+    const redirectUrl = returnTo || '/dashboard';
+    window.location.href = redirectUrl;
   };
 
   // Show onboarding flow if user needs it
