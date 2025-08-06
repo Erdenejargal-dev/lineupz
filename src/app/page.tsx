@@ -392,7 +392,7 @@ export default function Home() {
               <Button variant="outline" className="border-2 border-slate-300 text-slate-700 hover:bg-slate-50 px-12 py-6 text-xl font-semibold rounded-full transition-all duration-300 hover:scale-105">
                 View Pricing
                 <ArrowRight className="w-6 h-6 ml-3" />
-              </Button>f
+              </Button>
             </Link>
           </div>
         </div>
