@@ -56,42 +56,26 @@ export default function PricingPage() {
     setLoading(true);
 
     try {
-      // Get user info from token (simplified)
-      const userEmail = 'user@example.com'; // In real app, decode from token
-      const subscriptionId = `sub_${Date.now()}_${planId}`;
+      // Use the backend subscription creation endpoint
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
       
-      // Create BYL checkout directly using our Next.js API route
-      const response = await fetch('/api/byl-checkout', {
+      const response = await fetch(`${API_BASE_URL}/subscription/create`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          items: [{
-            price_data: {
-              unit_amount: Math.round(plans[planId].price),
-              product_data: {
-                name: `Tabi ${plans[planId].name} Subscription`,
-                description: `Monthly subscription to Tabi ${plans[planId].name} plan`
-              }
-            },
-            quantity: 1
-          }],
-          success_url: `${window.location.origin}/payment/success?type=subscription&ref=${subscriptionId}`,
-          cancel_url: `${window.location.origin}/payment/cancel?type=subscription&ref=${subscriptionId}`,
-          customer_email: userEmail,
-          client_reference_id: subscriptionId,
-          phone_number_collection: true,
-          delivery_address_collection: false
+          plan: planId
         })
       });
 
       const data = await response.json();
       
-      if (data.success && data.checkout?.url) {
+      if (data.success && data.checkoutUrl) {
         // Store subscription info locally for success page
         localStorage.setItem('pendingSubscription', JSON.stringify({
-          id: subscriptionId,
+          id: data.subscription._id,
           plan: planId,
           planName: plans[planId].name,
           amount: plans[planId].price,
@@ -99,9 +83,9 @@ export default function PricingPage() {
         }));
         
         // Redirect to BYL checkout
-        window.location.href = data.checkout.url;
+        window.location.href = data.checkoutUrl;
       } else {
-        throw new Error(data.error || 'Failed to create BYL checkout');
+        throw new Error(data.message || data.error || 'Failed to create subscription');
       }
     } catch (error) {
       console.error('Error creating subscription payment:', error);

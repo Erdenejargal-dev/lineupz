@@ -196,6 +196,13 @@ export class ApiClient {
     return this.request('/subscription/current');
   }
 
+  async createSubscription(plan) {
+    return this.request('/subscription/create', {
+      method: 'POST',
+      body: JSON.stringify({ plan }),
+    });
+  }
+
   async requestUpgrade(plan, paymentMethod, bankTransactionId) {
     return this.request('/subscription/upgrade', {
       method: 'POST',
