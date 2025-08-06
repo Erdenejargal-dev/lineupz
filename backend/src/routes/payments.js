@@ -24,7 +24,14 @@ try {
 router.post('/webhook', paymentController.handleWebhook);
 
 // Protected routes (require authentication)
-router.use(auth);
+router.use((req, res, next) => {
+  if (typeof auth === 'function') {
+    return auth(req, res, next);
+  } else {
+    console.error('Auth middleware not properly loaded');
+    return res.status(500).json({ error: 'Authentication service unavailable' });
+  }
+});
 
 // Create payments
 router.post('/subscription', paymentController.createSubscriptionPayment);
