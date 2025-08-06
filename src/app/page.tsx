@@ -7,6 +7,7 @@ import Header from "@/components/header"
 import Link from "next/link";
 import { Calendar, Users, ArrowRight, Play, Smartphone, Clock, Star, Zap, Shield } from "lucide-react";
 import { useEffect, useRef } from 'react';
+import VideoCarousel from '@/components/VideoCarousel';
 
 export default function Home() {
   const heroRef = useRef(null);
@@ -134,47 +135,10 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Section 1 - Video Section (Apple iPad style) */}
-      <section ref={videoRef} className="relative min-h-screen flex items-center justify-center bg-gray-100 overflow-hidden">
-        <div className="video-content max-w-7xl mx-auto px-4 text-center">
-          {/* Large video-like mockup */}
-          <div className="relative">
-            <div className="aspect-video max-w-6xl mx-auto bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl shadow-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-              
-              {/* Floating UI elements like iPad */}
-              <div className="absolute top-8 left-8 bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center gap-3 mb-2">
-                  <Calendar className="w-6 h-6 text-blue-600" />
-                  <span className="font-semibold text-gray-900">Smart Booking</span>
-                </div>
-                <p className="text-sm text-gray-600">Real-time scheduling</p>
-              </div>
-              
-              <div className="absolute top-8 right-8 bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center gap-3 mb-2">
-                  <Users className="w-6 h-6 text-green-600" />
-                  <span className="font-semibold text-gray-900">Digital Queue</span>
-                </div>
-                <p className="text-sm text-gray-600">No more waiting</p>
-              </div>
-              
-              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-white bg-opacity-90 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center gap-3 mb-2">
-                  <Smartphone className="w-6 h-6 text-purple-600" />
-                  <span className="font-semibold text-gray-900">Mobile First</span>
-                </div>
-                <p className="text-sm text-gray-600">Beautiful experience</p>
-              </div>
-              
-              {/* Play button */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <Play className="w-10 h-10 text-white ml-1" />
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Section 1 - Video Carousel (Apple iPad style) */}
+      <section ref={videoRef} className="relative min-h-screen flex items-center justify-center bg-gray-100 overflow-hidden py-20">
+        <div className="video-content max-w-7xl mx-auto px-4">
+          <VideoCarousel />
         </div>
       </section>
 
