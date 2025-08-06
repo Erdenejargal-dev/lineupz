@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section - Lawcus Style */}
-      <main ref={heroRef} className="pt-20 bg-white">
+      <main ref={heroRef} className="pt-10 bg-white">
         <div className="max-w-7xl mx-auto px-6 py-20">
           {/* Join Line Section - Mobile-First Hero */}
           <div className="mb-12 sm:mb-16 lg:mb-20">
