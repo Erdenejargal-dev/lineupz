@@ -1,452 +1,400 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
-import SplitText from "@/components/ui/split-text";
 import QuickJoinForm from '@/components/QuickJoinForm';
-import Header from "@/components/header"
+import LiveStats from '@/components/LiveStats';
 import Link from "next/link";
-import { Calendar, Users, ArrowRight, Play, Smartphone, Clock, Star, Zap, Shield, CheckCircle, MapPin, Bell } from "lucide-react";
+import { Calendar, Users, ArrowRight, Play, Smartphone, Clock, Star, Zap, Shield, CheckCircle, MapPin, Bell, BarChart3, MessageSquare, Globe } from "lucide-react";
 import { useEffect, useRef } from 'react';
-import VideoCarousel from '@/components/VideoCarousel';
 
 export default function Home() {
   const heroRef = useRef(null);
-  const videoRef = useRef(null);
-  const featuresRef = useRef(null);
-  const essentialsRef = useRef(null);
-
-  useEffect(() => {
-    const initAnimations = async () => {
-      if (typeof window !== 'undefined') {
-        try {
-          const { gsap } = await import('gsap');
-          const { ScrollTrigger } = await import('gsap/ScrollTrigger');
-          
-          gsap.registerPlugin(ScrollTrigger);
-
-          // Hero parallax
-          gsap.to('.hero-bg', {
-            yPercent: -30,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: heroRef.current,
-              start: 'top bottom',
-              end: 'bottom top',
-              scrub: true
-            }
-          });
-
-          // Video section animation
-          gsap.fromTo('.video-content', {
-            scale: 0.9,
-            opacity: 0
-          }, {
-            scale: 1,
-            opacity: 1,
-            duration: 1.5,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: videoRef.current,
-              start: 'top 80%',
-            }
-          });
-
-          // Feature cards stagger
-          gsap.fromTo('.feature-card', {
-            y: 60,
-            opacity: 0
-          }, {
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: featuresRef.current,
-              start: 'top 80%',
-            }
-          });
-
-          // Essentials animation
-          gsap.fromTo('.essential-item', {
-            scale: 0.8,
-            opacity: 0
-          }, {
-            scale: 1,
-            opacity: 1,
-            duration: 0.8,
-            stagger: 0.2,
-            ease: 'back.out(1.7)',
-            scrollTrigger: {
-              trigger: essentialsRef.current,
-              start: 'top 80%',
-            }
-          });
-
-        } catch (error) {
-          console.log('GSAP not available');
-        }
-      }
-    };
-
-    initAnimations();
-  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Simple Hero Section - Like Join Page */}
-      <main ref={heroRef} className="pt-20 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 py-16 text-center">
-          {/* Simple Headline */}
-          <div className="mb-12">
-            <h1 className="text-4xl md:text-6xl font-light text-black mb-4 tracking-tight">
-              Queue Management
+    <div className="min-h-screen bg-white">
+      {/* Hero Section - Lawcus Style */}
+      <main ref={heroRef} className="pt-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <div className="text-center mb-16">
+            {/* Main Headline */}
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+              Focus on your Clients, Let
+              <br />
+              <span className="text-blue-600">Tabi Handle the Rest!</span>
             </h1>
-            <p className="text-lg md:text-xl font-light text-gray-600 mb-8">
-              Simple. Elegant. Powerful.
+            
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
+              Streamline your queue management with smart automation. 
+              Reduce wait times, increase satisfaction, and grow your business.
             </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Link href="/creator-dashboard">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                  Start Free Trial
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button variant="outline" className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg font-semibold rounded-lg transition-all duration-300">
+                  Watch Demo
+                </Button>
+              </Link>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="flex items-center justify-center gap-8 text-sm text-gray-500 mb-16">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Free 14-day trial</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>Cancel anytime</span>
+              </div>
+            </div>
           </div>
 
-          {/* Clean CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href="/creator-dashboard">
-              <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3 text-base font-medium rounded-lg transition-all duration-200">
-                Get Started
-              </Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="outline" className="border border-gray-300 text-gray-700 hover:bg-white px-8 py-3 text-base font-medium rounded-lg transition-all duration-200">
-                Join Queue
-              </Button>
-            </Link>
+          {/* Feature Cards Grid - Like Lawcus */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Queue Management</h3>
+              <p className="text-gray-600 text-sm">Real-time queue tracking and customer notifications</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                <Calendar className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Smart Scheduling</h3>
+              <p className="text-gray-600 text-sm">Automated appointment booking and calendar sync</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                <MessageSquare className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">SMS Notifications</h3>
+              <p className="text-gray-600 text-sm">Keep customers informed with automated updates</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                <BarChart3 className="w-6 h-6 text-orange-600" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-2">Analytics Dashboard</h3>
+              <p className="text-gray-600 text-sm">Track performance and customer satisfaction</p>
+            </div>
           </div>
 
-          {/* Simple Demo Section */}
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm">
-              <QuickJoinForm />
+          {/* Live Stats Section */}
+          <div className="mb-20">
+            <LiveStats />
+          </div>
+
+          {/* Trusted By Section */}
+          <div className="text-center mb-20">
+            <p className="text-gray-500 text-sm mb-8">Trusted by leading businesses across Mongolia</p>
+            <div className="flex items-center justify-center gap-12 opacity-60">
+              <div className="text-gray-400 font-semibold">ERDENET CLINIC</div>
+              <div className="text-gray-400 font-semibold">BELLA SALON</div>
+              <div className="text-gray-400 font-semibold">MONGOL BANK</div>
+              <div className="text-gray-400 font-semibold">UB HOSPITAL</div>
+              <div className="text-gray-400 font-semibold">BLUE SKY</div>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Apple-Style Demos Section */}
-      <section ref={videoRef} className="relative py-32 bg-black overflow-hidden">
-        <div className="video-content max-w-6xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-7xl font-light text-white mb-8 tracking-tight">
-              Three ways to experience
+      {/* Problem/Solution Section - Dark Background like Lawcus */}
+      <section className="py-20 bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Say Goodbye to Tedious Queue Tasks
               <br />
-              <span className="font-extralight text-gray-400">queue management.</span>
+              and <span className="text-blue-400">Hello to Enhanced Productivity</span>
             </h2>
-            <p className="text-xl font-light text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              Customer. Business. Admin.
-            </p>
           </div>
-          
+
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-8">
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-white font-bold text-sm">✗</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-2">Manual queue management</h3>
+                  <p className="text-gray-300 text-sm">Time-consuming paper lists and verbal announcements</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-white font-bold text-sm">✗</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-2">Frustrated customers</h3>
+                  <p className="text-gray-300 text-sm">Long waits without clear information or updates</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-white font-bold text-sm">✗</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-2">Lost revenue opportunities</h3>
+                  <p className="text-gray-300 text-sm">Customers leaving due to poor queue experience</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 rounded-2xl p-8">
+              <div className="bg-white rounded-lg p-6 mb-6">
+                <QuickJoinForm />
+              </div>
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-medium">
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  Live Demo
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section - Like Lawcus */}
+      <section className="py-20 bg-gray-900">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Save Time, Boost Productivity,
+              <br />
+              and <span className="text-green-400">Streamline your Workflow</span>
+            </h2>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Customer App */}
-            <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 hover:bg-gray-800 transition-all duration-500 hover:-translate-y-1 group">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Users className="w-8 h-8 text-black" />
-                </div>
-                <h3 className="text-2xl font-light text-white mb-4">Customer</h3>
-                <p className="text-gray-400 mb-6 leading-relaxed font-light">
-                  Join queues, track position, and manage appointments.
-                </p>
-                <Link 
-                  href="/dashboard" 
-                  className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-all duration-300"
-                >
-                  Try Demo
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+            <div className="bg-gray-800 rounded-2xl p-8 text-center">
+              <div className="w-16 h-16 bg-yellow-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-gray-900">30%</span>
               </div>
+              <h3 className="text-xl font-bold text-white mb-2">Reduce Wait Times</h3>
+              <p className="text-gray-400">Average reduction in customer wait times with smart queue management</p>
             </div>
 
-            {/* Business Owner App */}
-            <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 hover:bg-gray-800 transition-all duration-500 hover:-translate-y-1 group">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Calendar className="w-8 h-8 text-black" />
-                </div>
-                <h3 className="text-2xl font-light text-white mb-4">Business</h3>
-                <p className="text-gray-400 mb-6 leading-relaxed font-light">
-                  Manage queues, appointments, and customer interactions.
-                </p>
-                <Link 
-                  href="/creator-dashboard" 
-                  className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-all duration-300"
-                >
-                  Try Demo
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+            <div className="bg-gray-800 rounded-2xl p-8 text-center">
+              <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">5</span>
               </div>
+              <h3 className="text-xl font-bold text-white mb-2">Hours Saved Daily</h3>
+              <p className="text-gray-400">Time saved on manual queue management and customer communication</p>
             </div>
 
-            {/* Admin Panel */}
-            <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 hover:bg-gray-800 transition-all duration-500 hover:-translate-y-1 group">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Shield className="w-8 h-8 text-black" />
-                </div>
-                <h3 className="text-2xl font-light text-white mb-4">Admin</h3>
-                <p className="text-gray-400 mb-6 leading-relaxed font-light">
-                  Complete platform management and analytics.
-                </p>
-                <Link 
-                  href="/pricing" 
-                  className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-full font-medium hover:bg-gray-100 transition-all duration-300"
-                >
-                  Try Demo
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+            <div className="bg-gray-800 rounded-2xl p-8 text-center">
+              <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-white">20%</span>
               </div>
+              <h3 className="text-xl font-bold text-white mb-2">Increase Revenue</h3>
+              <p className="text-gray-400">Revenue increase through improved customer satisfaction and retention</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Apple-Style Use Cases */}
-      <section ref={featuresRef} className="py-32 px-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-7xl font-light text-black mb-8 tracking-tight">
-              Built for every
+      {/* Testimonials Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Tabi Helping Customers Save Time,
               <br />
-              <span className="font-extralight text-gray-600">industry.</span>
+              <span className="text-blue-600">Boost Efficiency, and Track Conversions</span>
             </h2>
-            <p className="text-xl font-light text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              From healthcare to hospitality. From retail to government.
-            </p>
           </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Healthcare */}
-            <div className="feature-card group">
-              <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:-translate-y-1 text-center">
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-medium text-black mb-3">Healthcare</h3>
-                <p className="text-gray-600 text-sm font-light leading-relaxed">Patient appointments and clinic management</p>
-              </div>
+
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
+              <h4 className="font-semibold text-gray-900 mb-1">Dr. Batbayar</h4>
+              <p className="text-gray-600 text-sm mb-3">Erdenet Medical Center</p>
+              <p className="text-gray-700 text-sm italic">"Reduced patient wait times by 60% and improved satisfaction significantly."</p>
             </div>
 
-            {/* Restaurants */}
-            <div className="feature-card group">
-              <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:-translate-y-1 text-center">
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-medium text-black mb-3">Restaurants</h3>
-                <p className="text-gray-600 text-sm font-light leading-relaxed">Table reservations and waiting list management</p>
-              </div>
+            <div className="text-center">
+              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
+              <h4 className="font-semibold text-gray-900 mb-1">Ms. Oyunaa</h4>
+              <p className="text-gray-600 text-sm mb-3">Bella Beauty Salon</p>
+              <p className="text-gray-700 text-sm italic">"Our customers love the SMS notifications. No more crowded waiting rooms!"</p>
             </div>
 
-            {/* Beauty Salons */}
-            <div className="feature-card group">
-              <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:-translate-y-1 text-center">
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Star className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-medium text-black mb-3">Beauty Salons</h3>
-                <p className="text-gray-600 text-sm font-light leading-relaxed">Appointment booking and service scheduling</p>
-              </div>
+            <div className="text-center">
+              <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
+              <h4 className="font-semibold text-gray-900 mb-1">Mr. Ganbold</h4>
+              <p className="text-gray-600 text-sm mb-3">UB Government Office</p>
+              <p className="text-gray-700 text-sm italic">"Streamlined our citizen services. Much more organized and efficient now."</p>
             </div>
 
-            {/* Government Services */}
-            <div className="feature-card group">
-              <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:-translate-y-1 text-center">
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-medium text-black mb-3">Government</h3>
-                <p className="text-gray-600 text-sm font-light leading-relaxed">Public service appointments and citizen queues</p>
-              </div>
-            </div>
-
-            {/* Banks */}
-            <div className="feature-card group">
-              <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:-translate-y-1 text-center">
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-medium text-black mb-3">Banks</h3>
-                <p className="text-gray-600 text-sm font-light leading-relaxed">Customer service and teller queue management</p>
-              </div>
-            </div>
-
-            {/* Retail Stores */}
-            <div className="feature-card group">
-              <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:-translate-y-1 text-center">
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <MapPin className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-medium text-black mb-3">Retail Stores</h3>
-                <p className="text-gray-600 text-sm font-light leading-relaxed">Customer service and checkout optimization</p>
-              </div>
-            </div>
-
-            {/* Educational */}
-            <div className="feature-card group">
-              <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:-translate-y-1 text-center">
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Bell className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-medium text-black mb-3">Educational</h3>
-                <p className="text-gray-600 text-sm font-light leading-relaxed">Student services and academic appointments</p>
-              </div>
-            </div>
-
-            {/* Professional Services */}
-            <div className="feature-card group">
-              <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:-translate-y-1 text-center">
-                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-medium text-black mb-3">Professional</h3>
-                <p className="text-gray-600 text-sm font-light leading-relaxed">Consultations and professional service booking</p>
-              </div>
+            <div className="bg-blue-600 rounded-2xl p-8 text-white">
+              <h3 className="text-2xl font-bold mb-4">Ready to transform your business?</h3>
+              <p className="mb-6">Join hundreds of businesses already using Tabi to streamline their operations.</p>
+              <Link href="/creator-dashboard">
+                <Button className="bg-white text-blue-600 hover:bg-gray-100 px-6 py-3 font-semibold rounded-lg w-full">
+                  Start Free Trial
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Apple-Style Features Section */}
-      <section ref={essentialsRef} className="py-32 px-6 bg-black">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-7xl font-light text-white mb-8 tracking-tight">
-              Everything you need.
+      {/* All-in-One Solution Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Your All-in-One Solution for Seamless
               <br />
-              <span className="font-extralight text-gray-400">Nothing you don't.</span>
+              <span className="text-blue-600">Queue Management</span>
             </h2>
-            <p className="text-xl font-light text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              Powerful features designed with simplicity in mind.
-            </p>
           </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Real-time Queue Management */}
-            <div className="essential-item group">
-              <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 hover:bg-gray-800 transition-all duration-500 hover:-translate-y-1">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                    <Users className="w-8 h-8 text-black" />
-                  </div>
-                  <h3 className="text-xl font-light text-white mb-4">Real-time Updates</h3>
-                  <p className="text-gray-400 leading-relaxed font-light">
-                    Live queue updates and position tracking for seamless customer experience.
-                  </p>
+
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+              <div className="bg-gray-100 rounded-lg h-64 flex items-center justify-center mb-6">
+                <div className="text-gray-400 text-center">
+                  <Calendar className="w-16 h-16 mx-auto mb-4" />
+                  <p>Queue Management Dashboard</p>
                 </div>
               </div>
             </div>
 
-            {/* Google Calendar Integration */}
-            <div className="essential-item group">
-              <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 hover:bg-gray-800 transition-all duration-500 hover:-translate-y-1">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                    <Calendar className="w-8 h-8 text-black" />
-                  </div>
-                  <h3 className="text-xl font-light text-white mb-4">Calendar Sync</h3>
-                  <p className="text-gray-400 leading-relaxed font-light">
-                    Automatic synchronization with Google Calendar for perfect scheduling.
-                  </p>
-                </div>
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Everything you need in one platform</h3>
+                <p className="text-gray-600 mb-6">
+                  From queue management to customer notifications, analytics to appointment scheduling - 
+                  Tabi provides all the tools you need to run your business efficiently.
+                </p>
               </div>
-            </div>
 
-            {/* Smart Notifications */}
-            <div className="essential-item group">
-              <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 hover:bg-gray-800 transition-all duration-500 hover:-translate-y-1">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                    <Bell className="w-8 h-8 text-black" />
-                  </div>
-                  <h3 className="text-xl font-light text-white mb-4">Smart Notifications</h3>
-                  <p className="text-gray-400 leading-relaxed font-light">
-                    SMS, email, and in-app notifications to keep customers informed.
-                  </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-700">Real-time queue management</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-700">Automated SMS notifications</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-700">Calendar integration</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-700">Analytics and reporting</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-700">Mobile-friendly interface</span>
                 </div>
               </div>
-            </div>
 
-            {/* Mobile Responsive */}
-            <div className="essential-item group">
-              <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 hover:bg-gray-800 transition-all duration-500 hover:-translate-y-1">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                    <Smartphone className="w-8 h-8 text-black" />
-                  </div>
-                  <h3 className="text-xl font-light text-white mb-4">Mobile First</h3>
-                  <p className="text-gray-400 leading-relaxed font-light">
-                    Beautiful, responsive design that works perfectly on all devices.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Analytics & Insights */}
-            <div className="essential-item group">
-              <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 hover:bg-gray-800 transition-all duration-500 hover:-translate-y-1">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                    <Star className="w-8 h-8 text-black" />
-                  </div>
-                  <h3 className="text-xl font-light text-white mb-4">Analytics</h3>
-                  <p className="text-gray-400 leading-relaxed font-light">
-                    Comprehensive insights to track performance and customer satisfaction.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Flexible Pricing */}
-            <div className="essential-item group">
-              <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 hover:bg-gray-800 transition-all duration-500 hover:-translate-y-1">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-105 transition-transform duration-300">
-                    <Zap className="w-8 h-8 text-black" />
-                  </div>
-                  <h3 className="text-xl font-light text-white mb-4">Flexible Pricing</h3>
-                  <p className="text-gray-400 leading-relaxed font-light">
-                    Transparent pricing with no hidden fees. Scale as you grow.
-                  </p>
-                </div>
-              </div>
+              <Link href="/creator-dashboard">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold rounded-lg">
+                  Get Started Now
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Apple-Style CTA Section */}
-      <section className="py-32 px-6 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl md:text-7xl font-light text-black mb-8 tracking-tight">
-            Ready to get started?
+      {/* Integration Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Integrated with All Your
+            <br />
+            <span className="text-blue-600">Favourite Apps</span>
           </h2>
-          <p className="text-xl font-light text-gray-600 mb-12 leading-relaxed">
-            Join thousands of businesses already using Tabi.
+          <p className="text-xl text-gray-600 mb-16">
+            Seamlessly connect with the tools you already use
           </p>
-          
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+
+          {/* Integration Icons Grid */}
+          <div className="grid grid-cols-4 md:grid-cols-8 gap-8 items-center justify-items-center opacity-60">
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+            <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section - Dark */}
+      <section className="py-20 bg-gray-900 text-white">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Get Started in 30 Seconds
+            <br />
+            <span className="text-blue-400">Free for 7 Days</span>
+          </h2>
+          <p className="text-xl text-gray-300 mb-12">
+            No credit card required. Start managing your queues smarter today.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
             <Link href="/creator-dashboard">
-              <Button className="bg-black hover:bg-gray-800 text-white px-12 py-4 text-lg font-medium rounded-full transition-all duration-300 hover:scale-[1.02] shadow-lg">
-                Get Started
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 text-xl font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                Start Free Trial
               </Button>
             </Link>
             <Link href="/pricing">
-              <Button variant="outline" className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-12 py-4 text-lg font-medium rounded-full transition-all duration-300 hover:scale-[1.02]">
+              <Button variant="outline" className="border-2 border-gray-600 text-gray-300 hover:bg-gray-800 px-12 py-4 text-xl font-semibold rounded-lg transition-all duration-300">
                 View Pricing
               </Button>
             </Link>
           </div>
+
+          <div className="flex items-center justify-center gap-8 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-400" />
+              <span>14-day free trial</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-400" />
+              <span>No setup fees</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-400" />
+              <span>Cancel anytime</span>
+            </div>
+          </div>
         </div>
       </section>
-
     </div>
   );
 }

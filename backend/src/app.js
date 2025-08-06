@@ -91,6 +91,7 @@ app.use('/api/subscription', require('./routes/subscription'));
 // Temporarily disabled reviews route due to loading issues
 // app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/payments', require('./routes/payments'));
+app.use('/api/stats', require('./routes/stats'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
