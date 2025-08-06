@@ -57,7 +57,7 @@ export default function PricingPage() {
 
     try {
       // Create subscription first
-      const subResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/create`, {
+      const subResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscription/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -75,7 +75,7 @@ export default function PricingPage() {
       }
 
       // Create BYL payment
-      const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/subscription`, {
+      const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/subscription`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
