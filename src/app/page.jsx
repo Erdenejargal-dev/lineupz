@@ -27,7 +27,7 @@ export default function Home() {
                 </div>
                 
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
-                  Join a Line
+                  Schedule
                   <br className="hidden sm:block" />
                   <span className="text-blue-600"> Instantly</span>
                 </h2>
