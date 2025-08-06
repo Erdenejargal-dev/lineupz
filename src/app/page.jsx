@@ -15,24 +15,80 @@ export default function Home() {
       {/* Hero Section - Lawcus Style */}
       <main ref={heroRef} className="pt-20 bg-white">
         <div className="max-w-7xl mx-auto px-6 py-20">
-          {/* Join Line Section - First Thing Visible */}
-          <div className="text-center mb-20">
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-3xl p-8 mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Join a Line Now
-              </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                Have a 6-digit line code? Join instantly and skip the wait!
-              </p>
-              
-              <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md mx-auto">
+          {/* Join Line Section - Mobile-First Hero */}
+          <div className="mb-12 sm:mb-16 lg:mb-20">
+            {/* Mobile-First Container */}
+            <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-sm border border-blue-100">
+              {/* Header Section */}
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  Quick Join
+                </div>
+                
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
+                  Join a Line
+                  <br className="hidden sm:block" />
+                  <span className="text-blue-600"> Instantly</span>
+                </h2>
+                
+                <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-2 leading-relaxed">
+                  Have a 6-digit line code? Skip the wait and join your queue in seconds!
+                </p>
+              </div>
+
+              {/* Main Join Form Card */}
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-md lg:max-w-lg mx-auto mb-6 sm:mb-8">
                 <QuickJoinForm />
               </div>
-              
-              <div className="mt-6">
-                <Link href="/join" className="text-blue-600 hover:text-blue-800 font-semibold">
-                  Need more options? Visit our full join page →
-                </Link>
+
+              {/* Additional Options */}
+              <div className="text-center space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                    <span>Instant notifications</span>
+                  </div>
+                  <div className="hidden sm:block w-1 h-1 bg-gray-300 rounded-full"></div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                    <span>Real-time updates</span>
+                  </div>
+                  <div className="hidden sm:block w-1 h-1 bg-gray-300 rounded-full"></div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                    <span>No app required</span>
+                  </div>
+                </div>
+                
+                <div className="pt-2 sm:pt-4 border-t border-gray-100">
+                  <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">
+                    Don't have a line code?
+                  </p>
+                  <Link 
+                    href="/join" 
+                    className="inline-flex items-center gap-1 sm:gap-2 text-blue-600 hover:text-blue-700 font-semibold text-sm sm:text-base transition-colors duration-200 hover:underline"
+                  >
+                    <span>Explore all available lines</span>
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Mobile Stats Preview */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-6 sm:mt-8 lg:hidden">
+                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-2 sm:p-3 text-center">
+                  <div className="text-lg sm:text-xl font-bold text-blue-600">127+</div>
+                  <div className="text-xs text-gray-600">Active Lines</div>
+                </div>
+                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-2 sm:p-3 text-center">
+                  <div className="text-lg sm:text-xl font-bold text-green-600">2.8K+</div>
+                  <div className="text-xs text-gray-600">Served Today</div>
+                </div>
+                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-2 sm:p-3 text-center">
+                  <div className="text-lg sm:text-xl font-bold text-purple-600">~12min</div>
+                  <div className="text-xs text-gray-600">Avg Wait</div>
+                </div>
               </div>
             </div>
           </div>
@@ -135,61 +191,110 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Problem/Solution Section - Dark Background like Lawcus */}
-      <section className="py-20 bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Say Goodbye to Tedious Queue Tasks
+      {/* Modern Feature Showcase Section */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 sm:mb-6">
+              Ready to Run your Business
               <br />
-              and <span className="text-blue-400">Hello to Enhanced Productivity</span>
+              <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Better</span> with us
             </h2>
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Transform your queue management with smart automation that delights customers and streamlines operations.
+            </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="text-white font-bold text-sm">✗</span>
+          {/* Feature Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Main Feature Card - Spans 2 columns on desktop */}
+            <div className="lg:col-span-2">
+              <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-3xl p-6 sm:p-8 lg:p-12 text-white relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-20 -translate-y-20"></div>
+                  <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full translate-x-16 translate-y-16"></div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-white mb-2">Manual queue management</h3>
-                  <p className="text-gray-300 text-sm">Time-consuming paper lists and verbal announcements</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="text-white font-bold text-sm">✗</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white mb-2">Frustrated customers</h3>
-                  <p className="text-gray-300 text-sm">Long waits without clear information or updates</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="text-white font-bold text-sm">✗</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white mb-2">Lost revenue opportunities</h3>
-                  <p className="text-gray-300 text-sm">Customers leaving due to poor queue experience</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-800 rounded-2xl p-8">
-              <div className="bg-white rounded-lg p-6 mb-6">
-                <QuickJoinForm />
-              </div>
-              <div className="text-center">
-                <div className="inline-flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                  Live Demo
+                
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold">Smart Queue Management</h3>
+                      <p className="text-blue-100 text-sm sm:text-base">Real-time automation at your fingertips</p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-blue-50 mb-8 text-sm sm:text-base leading-relaxed">
+                    Eliminate manual processes with intelligent queue tracking, automated notifications, and seamless customer experiences.
+                  </p>
+                  
+                  <div className="bg-white rounded-2xl p-4 sm:p-6 mb-6">
+                    <QuickJoinForm />
+                  </div>
+                  
+                  <div className="flex items-center justify-center">
+                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      Live Demo
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Side Feature Cards */}
+            <div className="space-y-6 lg:space-y-8">
+              {/* Live Chat Card */}
+              <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden">
+                <div className="absolute top-4 right-4 w-16 h-16 bg-white/10 rounded-full"></div>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm">
+                    <MessageSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-3">Live Support</h3>
+                  <p className="text-purple-100 text-sm sm:text-base mb-6 leading-relaxed">
+                    Get instant help from our support team whenever you need assistance.
+                  </p>
+                  <Link href="/dashboard">
+                    <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm transition-all duration-200">
+                      Get Help
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Demo Card */}
+              <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden">
+                <div className="absolute bottom-4 left-4 w-20 h-20 bg-white/10 rounded-full"></div>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm">
+                    <Play className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-3">Watch Demo</h3>
+                  <p className="text-green-100 text-sm sm:text-base mb-6 leading-relaxed">
+                    See how Tabi transforms your business operations in just 2 minutes.
+                  </p>
+                  <Link href="/dashboard">
+                    <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm transition-all duration-200">
+                      Watch Now
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="text-center mt-12 sm:mt-16 lg:mt-20">
+            <Link href="/creator-dashboard">
+              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 sm:px-12 py-4 text-base sm:text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                Start Your Free Trial
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
