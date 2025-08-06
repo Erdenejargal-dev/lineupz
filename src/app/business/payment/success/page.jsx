@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { CheckCircle, Building, Users, ArrowRight, RefreshCw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
-export default function BusinessPaymentSuccessPage() {
+function BusinessPaymentSuccessContent() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -228,4 +228,16 @@ export default function BusinessPaymentSuccessPage() {
   }
 
   return null;
+}
+
+export default function BusinessPaymentSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <RefreshCw className="h-8 w-8 animate-spin text-purple-600" />
+      </div>
+    }>
+      <BusinessPaymentSuccessContent />
+    </Suspense>
+  );
 }

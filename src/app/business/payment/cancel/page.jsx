@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { XCircle, ArrowLeft, RefreshCw, Building, CreditCard } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
-export default function BusinessPaymentCancelPage() {
+function BusinessPaymentCancelContent() {
   const [loading, setLoading] = useState(true);
   const [businessId, setBusinessId] = useState(null);
   const searchParams = useSearchParams();
@@ -100,5 +100,17 @@ export default function BusinessPaymentCancelPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BusinessPaymentCancelPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <RefreshCw className="h-8 w-8 animate-spin text-gray-600" />
+      </div>
+    }>
+      <BusinessPaymentCancelContent />
+    </Suspense>
   );
 }
