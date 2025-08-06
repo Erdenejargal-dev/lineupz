@@ -13,18 +13,35 @@ if (Test-Path "backend.zip") {
 }
 
 try {
-    # Get all items in backend folder except node_modules
-    $backendItems = Get-ChildItem -Path "backend" -Exclude "node_modules"
+    # Create a temporary directory for backend files (excluding node_modules)
+    $tempDir = "temp_backend"
+    if (Test-Path $tempDir) {
+        Remove-Item -Recurse -Force $tempDir
+    }
+    New-Item -ItemType Directory -Path $tempDir | Out-Null
     
-    # Create temporary paths for compression
-    $tempPaths = @()
-    foreach ($item in $backendItems) {
-        $tempPaths += $item.FullName
+    # Copy all backend files except node_modules
+    Write-Host "Copying backend files (excluding node_modules)..." -ForegroundColor Yellow
+    robocopy "backend" $tempDir /E /XD node_modules /NFL /NDL /NJH /NJS /NC /NS /NP
+    
+    # Compress the temporary directory
+    Compress-Archive -Path "$tempDir\*" -DestinationPath "backend.zip" -Force
+    
+    # Clean up temporary directory
+    Remove-Item -Recurse -Force $tempDir
+    
+    Write-Host "✅ backend.zip created successfully (node_modules excluded)" -ForegroundColor Green
+    
+    # Verify the zip contains our new files
+    $zipContents = Get-ChildItem -Path "backend.zip" | ForEach-Object { 
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($_.FullName)
+        $zip.Entries | Where-Object { $_.Name -like "*subscription*" -or $_.Name -like "*payment*" }
+        $zip.Dispose()
     }
     
-    # Compress excluding node_modules
-    Compress-Archive -Path $tempPaths -DestinationPath "backend.zip" -Force
-    Write-Host "✅ backend.zip created successfully (node_modules excluded)" -ForegroundColor Green
+    Write-Host "✅ Verified: New subscription and payment files included" -ForegroundColor Green
+    
 } catch {
     Write-Host "❌ Failed to create backend.zip: $($_.Exception.Message)" -ForegroundColor Red
     Read-Host "Press Enter to exit"

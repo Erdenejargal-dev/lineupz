@@ -56,46 +56,52 @@ export default function PricingPage() {
     setLoading(true);
 
     try {
-      // Create subscription first
-      const subResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscription/create`, {
+      // Get user info from token (simplified)
+      const userEmail = 'user@example.com'; // In real app, decode from token
+      const subscriptionId = `sub_${Date.now()}_${planId}`;
+      
+      // Create BYL checkout directly using our Next.js API route
+      const response = await fetch('/api/byl-checkout', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          plan: planId
+          items: [{
+            price_data: {
+              unit_amount: Math.round(plans[planId].price),
+              product_data: {
+                name: `Tabi ${plans[planId].name} Subscription`,
+                description: `Monthly subscription to Tabi ${plans[planId].name} plan`
+              }
+            },
+            quantity: 1
+          }],
+          success_url: `${window.location.origin}/payment/success?type=subscription&ref=${subscriptionId}`,
+          cancel_url: `${window.location.origin}/payment/cancel?type=subscription&ref=${subscriptionId}`,
+          customer_email: userEmail,
+          client_reference_id: subscriptionId,
+          phone_number_collection: true,
+          delivery_address_collection: false
         })
       });
 
-      const subData = await subResponse.json();
+      const data = await response.json();
       
-      if (!subData.success) {
-        throw new Error(subData.message || 'Failed to create subscription');
-      }
-
-      // Create BYL payment
-      const paymentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/subscription`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          subscriptionId: subData.subscription._id,
+      if (data.success && data.checkout?.url) {
+        // Store subscription info locally for success page
+        localStorage.setItem('pendingSubscription', JSON.stringify({
+          id: subscriptionId,
+          plan: planId,
           planName: plans[planId].name,
           amount: plans[planId].price,
-          customerEmail: subData.subscription.userId?.email
-        })
-      });
-
-      const paymentData = await paymentResponse.json();
-      
-      if (paymentData.success) {
+          timestamp: Date.now()
+        }));
+        
         // Redirect to BYL checkout
-        window.location.href = paymentData.payment.checkoutUrl;
+        window.location.href = data.checkout.url;
       } else {
-        throw new Error(paymentData.error || 'Failed to create payment');
+        throw new Error(data.error || 'Failed to create BYL checkout');
       }
     } catch (error) {
       console.error('Error creating subscription payment:', error);
