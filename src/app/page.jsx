@@ -177,17 +177,6 @@ export default function Home() {
             <LiveStats />
           </div>
 
-          {/* Trusted By Section */}
-          <div className="text-center mb-20">
-            <p className="text-gray-500 text-sm mb-8">Trusted by leading businesses across Mongolia</p>
-            <div className="flex items-center justify-center gap-12 opacity-60">
-              <div className="text-gray-400 font-semibold">ERDENET CLINIC</div>
-              <div className="text-gray-400 font-semibold">BELLA SALON</div>
-              <div className="text-gray-400 font-semibold">MONGOL BANK</div>
-              <div className="text-gray-400 font-semibold">UB HOSPITAL</div>
-              <div className="text-gray-400 font-semibold">BLUE SKY</div>
-            </div>
-          </div>
         </div>
       </main>
 
