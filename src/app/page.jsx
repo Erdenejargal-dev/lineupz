@@ -93,111 +93,38 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Apple-Style Nostalgic Hero Section */}
-      <main ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white">
-        {/* Subtle Background Pattern */}
-        <div className="absolute inset-0 opacity-[0.02]">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgb(0,0,0) 1px, transparent 0)`,
-            backgroundSize: '20px 20px'
-          }}></div>
-        </div>
-
-        <div className="relative z-10 max-w-6xl mx-auto px-6 py-20 text-center">
-          {/* Main Headline */}
-          <div className="mb-8">
-            <h1 className="text-6xl md:text-8xl font-light text-black mb-6 tracking-tight leading-none">
-              Queue.
-              <br />
-              <span className="font-extralight text-gray-600">Reimagined.</span>
+    <div className="min-h-screen bg-gray-50">
+      {/* Simple Hero Section - Like Join Page */}
+      <main ref={heroRef} className="pt-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-16 text-center">
+          {/* Simple Headline */}
+          <div className="mb-12">
+            <h1 className="text-4xl md:text-6xl font-light text-black mb-4 tracking-tight">
+              Queue Management
             </h1>
-            
-            <p className="text-2xl md:text-3xl font-light text-gray-700 max-w-4xl mx-auto leading-relaxed">
-              The most intuitive way to manage queues.
-              <br />
-              <span className="text-gray-500">Simple. Elegant. Powerful.</span>
+            <p className="text-lg md:text-xl font-light text-gray-600 mb-8">
+              Simple. Elegant. Powerful.
             </p>
           </div>
 
           {/* Clean CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Link href="/creator-dashboard">
-              <Button className="bg-black hover:bg-gray-800 text-white px-12 py-4 text-lg font-medium rounded-full transition-all duration-300 hover:scale-[1.02] shadow-lg">
+              <Button className="bg-black hover:bg-gray-800 text-white px-8 py-3 text-base font-medium rounded-lg transition-all duration-200">
                 Get Started
               </Button>
             </Link>
             <Link href="/dashboard">
-              <Button variant="outline" className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-12 py-4 text-lg font-medium rounded-full transition-all duration-300 hover:scale-[1.02]">
+              <Button variant="outline" className="border border-gray-300 text-gray-700 hover:bg-white px-8 py-3 text-base font-medium rounded-lg transition-all duration-200">
                 Join Queue
               </Button>
             </Link>
           </div>
 
-          {/* Minimalist Demo Section */}
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-gray-50 rounded-3xl p-12 border border-gray-200 shadow-2xl">
-              <div className="mb-8">
-                <h3 className="text-2xl font-light text-black mb-3">Experience Queue Management</h3>
-                <p className="text-gray-600 font-light">Clean. Simple. Effective.</p>
-              </div>
-              
+          {/* Simple Demo Section */}
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm">
               <QuickJoinForm />
-              
-              {/* Clean Queue Status */}
-              <div className="mt-12 pt-8 border-t border-gray-200">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-2xl p-6 border border-gray-100">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium">1</span>
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium text-black">Dr. Smith's Clinic</div>
-                        <div className="text-sm text-gray-500">3 people ahead</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                        ~15 min
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white rounded-2xl p-6 border border-gray-100 opacity-60">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium">2</span>
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium text-black">Bella's Salon</div>
-                        <div className="text-sm text-gray-500">7 people ahead</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                        ~30 min
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Minimal Stats */}
-          <div className="mt-20 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
-            <div className="text-center">
-              <div className="text-4xl font-light text-black mb-2">10K+</div>
-              <div className="text-sm font-light text-gray-500 uppercase tracking-wide">Users</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-black mb-2">500+</div>
-              <div className="text-sm font-light text-gray-500 uppercase tracking-wide">Businesses</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-light text-black mb-2">99.9%</div>
-              <div className="text-sm font-light text-gray-500 uppercase tracking-wide">Uptime</div>
             </div>
           </div>
         </div>
@@ -520,16 +447,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Apple-Style Footer */}
-      <footer className="py-16 bg-gray-50 border-t border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 text-center">
-          <div className="mb-8">
-            <h3 className="text-2xl font-light text-black mb-2">Tabi</h3>
-            <p className="text-gray-500 font-light">Queue management. Reimagined.</p>
-          </div>
-          <p className="text-gray-400 font-light">© 2024 Tabi. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 }
