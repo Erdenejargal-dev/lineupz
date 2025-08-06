@@ -147,34 +147,40 @@ export default function BusinessRegisterPage() {
       setSuccess('Business registered successfully! Redirecting to payment...');
       
       setTimeout(() => {
-        // Use the working BYL checkout API route
-        const checkoutData = {
-          amount: selectedPlanDetails.price,
-          description: `Business Registration - ${selectedPlanDetails.name}`,
-          metadata: {
-            type: 'business_registration',
-            businessId: businessId,
-            businessData: formData,
-            plan: selectedPlan
-          },
-          successUrl: '/business/payment/success',
-          cancelUrl: '/business/payment/cancel'
-        };
-
-        // Create payment via API
-        fetch('/api/byl-checkout', {
+        // Use the backend subscription endpoint like pricing page does
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        
+        fetch(`${API_BASE_URL}/subscription/create`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token || ''}`
           },
-          body: JSON.stringify(checkoutData)
+          body: JSON.stringify({
+            plan: selectedPlan,
+            type: 'business_registration',
+            businessData: formData,
+            businessId: businessId
+          })
         })
         .then(response => response.json())
         .then(data => {
-          if (data.success && data.paymentUrl) {
-            window.location.href = data.paymentUrl;
+          if (data.success && data.checkoutUrl) {
+            // Store business registration info for success page
+            localStorage.setItem('pendingBusinessRegistration', JSON.stringify({
+              id: data.subscription?._id,
+              plan: selectedPlan,
+              planName: selectedPlanDetails.name,
+              amount: selectedPlanDetails.price,
+              businessData: formData,
+              businessId: businessId,
+              timestamp: Date.now()
+            }));
+            
+            // Redirect to BYL checkout
+            window.location.href = data.checkoutUrl;
           } else {
-            setError('Failed to create payment. Please try again.');
+            setError(data.message || data.error || 'Failed to create business registration payment');
             setSubmitting(false);
           }
         })
