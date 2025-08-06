@@ -36,14 +36,12 @@ export default function BusinessRegisterPage() {
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     
-    if (!savedToken) {
-      window.location.href = '/login';
-      return;
-    }
-
-    setToken(savedToken);
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    // Allow access without authentication for business registration
+    if (savedToken) {
+      setToken(savedToken);
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
     }
 
     // Fetch business plans
@@ -57,11 +55,40 @@ export default function BusinessRegisterPage() {
       const data = await response.json();
       if (data.success) {
         setPlans(data.plans);
+      } else {
+        // Fallback to static plans if API fails
+        setPlans(getStaticPlans());
       }
     } catch (error) {
       console.error('Error fetching plans:', error);
+      // Fallback to static plans if API fails
+      setPlans(getStaticPlans());
     }
   };
+
+  const getStaticPlans = () => ({
+    starter: {
+      name: 'Starter Plan',
+      maxArtists: 5,
+      maxLinesPerArtist: 3,
+      price: 120000,
+      features: ['Basic queue management', 'SMS notifications', 'Basic analytics', '3 lines per artist']
+    },
+    professional: {
+      name: 'Professional Plan', 
+      maxArtists: 8,
+      maxLinesPerArtist: 10,
+      price: 200000,
+      features: ['Advanced queue management', 'SMS & Email notifications', 'Advanced analytics', 'Calendar integration', '10 lines per artist']
+    },
+    enterprise: {
+      name: 'Enterprise Plan',
+      maxArtists: 12,
+      maxLinesPerArtist: 999,
+      price: 250000,
+      features: ['Full queue management', 'All notifications', 'Complete analytics', 'Calendar integration', 'Priority support', 'Unlimited lines per artist']
+    }
+  });
 
   const handleInputChange = (field, value) => {
     if (field.includes('.')) {
