@@ -5,12 +5,12 @@ import SplitText from "@/components/ui/split-text";
 import QuickJoinForm from '@/components/QuickJoinForm';
 import Header from "@/components/header"
 import Link from "next/link";
-import { Calendar, Users, ArrowRight, CheckCircle } from "lucide-react";
+import { Calendar, Users, ArrowRight } from "lucide-react";
 import { useEffect, useRef } from 'react';
 
 export default function Home() {
-  const featuresRef = useRef(null);
-  const calendarRef = useRef(null);
+  const section1Ref = useRef(null);
+  const section2Ref = useRef(null);
 
   useEffect(() => {
     const initAnimations = async () => {
@@ -21,29 +21,29 @@ export default function Home() {
           
           gsap.registerPlugin(ScrollTrigger);
 
-          gsap.fromTo('.feature-card', {
-            y: 60,
+          gsap.fromTo('.fade-up', {
+            y: 40,
             opacity: 0
           }, {
             y: 0,
             opacity: 1,
             duration: 0.8,
-            stagger: 0.2,
+            stagger: 0.1,
             scrollTrigger: {
-              trigger: featuresRef.current,
+              trigger: section1Ref.current,
               start: 'top 80%',
             }
           });
 
-          gsap.fromTo('.calendar-demo', {
-            x: 50,
+          gsap.fromTo('.slide-in', {
+            x: 60,
             opacity: 0
           }, {
             x: 0,
             opacity: 1,
             duration: 1,
             scrollTrigger: {
-              trigger: calendarRef.current,
+              trigger: section2Ref.current,
               start: 'top 70%',
             }
           });
@@ -59,7 +59,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section - Keep existing */}
-      <main className="flex-1 flex flex-col justify-center items-center text-center px-4 min-h-screen">
+      <main className="flex-1 flex flex-col justify-center items-center text-center px-4 min-h-screen bg-gradient-to-b from-white to-gray-50">
         <div className="mb-8">
           <SplitText className="text-5xl text-slate-900 tracking-tighter font-medium">
             Let's get in queue
@@ -79,108 +79,55 @@ export default function Home() {
         </div>
       </main>
 
-      {/* What is Tabi - Simple */}
-      <section ref={featuresRef} className="py-24 px-4 bg-slate-50">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-slate-900 mb-4">
-            Smart appointment booking for businesses
-          </h2>
-          <p className="text-xl text-slate-600 mb-16 max-w-3xl mx-auto">
-            Tabi is the modern appointment platform that connects businesses with their customers. 
-            From beauty salons to medical clinics, we make scheduling simple and efficient.
-          </p>
-          
-          <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-            <div className="feature-card text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Calendar className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">Online Appointments</h3>
-              <p className="text-slate-600">
-                Customers book appointments online with real-time availability and instant confirmations.
-              </p>
-            </div>
-            
-            <div className="feature-card text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">Digital Queues</h3>
-              <p className="text-slate-600">
-                Eliminate waiting rooms with smart digital queues that keep customers informed.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Google Calendar Integration */}
-      <section ref={calendarRef} className="py-24 px-4 bg-white">
+      {/* Section 1 - What is Tabi (Apple style) */}
+      <section ref={section1Ref} className="py-20 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-                <Calendar className="w-4 h-4" />
-                Google Calendar Integration
-              </div>
-              <h2 className="text-4xl font-bold text-slate-900 mb-6">
-                Sync with your Google Calendar
-              </h2>
-              <p className="text-xl text-slate-600 mb-8">
-                Tabi automatically syncs all appointments with your Google Calendar, 
-                keeping your schedule organized and sending reminders to both you and your customers.
-              </p>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <CheckCircle className="w-6 h-6 text-green-500 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-slate-900 mb-1">Automatic Sync</h4>
-                    <p className="text-slate-600">All appointments appear in your Google Calendar instantly</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <CheckCircle className="w-6 h-6 text-green-500 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-slate-900 mb-1">Smart Reminders</h4>
-                    <p className="text-slate-600">Google Calendar sends automatic reminders to reduce no-shows</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <CheckCircle className="w-6 h-6 text-green-500 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-slate-900 mb-1">Conflict Prevention</h4>
-                    <p className="text-slate-600">Prevents double-booking by checking your existing calendar</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="calendar-demo">
-              <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <Calendar className="w-6 h-6 text-blue-600" />
-                  <span className="font-semibold text-slate-900">Google Calendar</span>
-                  <div className="ml-auto w-2 h-2 bg-green-400 rounded-full"></div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-slate-900">Hair Appointment</h4>
-                      <span className="text-sm text-slate-500">2:00 PM</span>
+          <div className="text-center mb-16">
+            <h2 className="fade-up text-5xl md:text-6xl font-light text-gray-900 mb-6 tracking-tight leading-tight">
+              Appointment booking.
+              <br />
+              <span className="font-semibold">Reimagined.</span>
+            </h2>
+            <p className="fade-up text-xl text-gray-600 max-w-3xl mx-auto font-light leading-relaxed">
+              Tabi is the modern appointment platform that connects businesses with their customers. 
+              Simple, elegant, and powerful.
+            </p>
+          </div>
+          
+          {/* Large visual mockup area - Apple style */}
+          <div className="fade-up relative max-w-5xl mx-auto">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl p-12 shadow-2xl">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="space-y-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                      <Calendar className="w-6 h-6 text-white" />
                     </div>
-                    <p className="text-sm text-slate-600">Sarah Johnson • Beauty Salon</p>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">Smart Scheduling</h3>
+                      <p className="text-gray-600">Real-time availability</p>
+                    </div>
                   </div>
                   
-                  <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-r">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-slate-900">Dental Checkup</h4>
-                      <span className="text-sm text-slate-500">4:30 PM</span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                      <Users className="w-6 h-6 text-white" />
                     </div>
-                    <p className="text-sm text-slate-600">Mike Chen • Dental Clinic</p>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">Digital Queues</h3>
+                      <p className="text-gray-600">No more waiting rooms</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <div className="bg-white rounded-2xl shadow-xl p-6 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
+                      <div className="text-center">
+                        <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500 font-medium">Beautiful Interface</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -189,33 +136,112 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Simple CTA */}
-      <section className="py-24 px-4 bg-slate-900">
+      {/* Section 2 - Google Calendar Integration (Apple style) */}
+      <section ref={section2Ref} className="py-20 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="slide-in">
+              <h2 className="text-5xl md:text-6xl font-light text-gray-900 mb-8 tracking-tight leading-tight">
+                Works with
+                <br />
+                <span className="font-semibold text-blue-600">Google Calendar.</span>
+              </h2>
+              <p className="text-xl text-gray-600 mb-8 font-light leading-relaxed">
+                Seamlessly sync all your appointments. Automatic reminders. 
+                Never miss a booking again.
+              </p>
+              
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-3"></div>
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-1">Automatic Sync</h4>
+                    <p className="text-gray-600">Every appointment appears instantly in your Google Calendar</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-3"></div>
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-1">Smart Reminders</h4>
+                    <p className="text-gray-600">Reduce no-shows with automatic notifications</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-3"></div>
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-1">Conflict Prevention</h4>
+                    <p className="text-gray-600">Prevents double-booking across all your calendars</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="slide-in">
+              <div className="relative">
+                <div className="bg-white rounded-3xl shadow-2xl p-8 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-lg font-medium text-gray-900">Google Calendar</span>
+                    <div className="ml-auto w-3 h-3 bg-green-400 rounded-full"></div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-blue-50 rounded-2xl p-4 border-l-4 border-blue-400">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium text-gray-900">Hair Appointment</h4>
+                        <span className="text-sm text-gray-500">2:00 PM</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Sarah Johnson</p>
+                    </div>
+                    
+                    <div className="bg-green-50 rounded-2xl p-4 border-l-4 border-green-400">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium text-gray-900">Dental Checkup</h4>
+                        <span className="text-sm text-gray-500">4:30 PM</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Mike Chen</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3 - CTA (Apple style) */}
+      <section className="py-20 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">
-            Ready to streamline your appointments?
+          <h2 className="text-5xl md:text-6xl font-light text-gray-900 mb-8 tracking-tight leading-tight">
+            Get started with
+            <br />
+            <span className="font-semibold">Tabi today.</span>
           </h2>
-          <p className="text-xl text-slate-300 mb-8">
-            Join businesses using Tabi to manage their bookings efficiently.
+          <p className="text-xl text-gray-600 mb-12 font-light">
+            Join thousands of businesses streamlining their appointments.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/creator-dashboard">
-              <Button className="bg-white text-slate-900 hover:bg-slate-100 px-8 py-3 text-lg font-medium">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
                 Start Free Trial
-                <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <Link href="/pricing">
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800 px-8 py-3 text-lg font-medium">
-                View Pricing
+              <Button variant="outline" className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg font-medium rounded-full transition-all duration-300">
+                Learn More
+                <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      <footer className="flex justify-center py-4">
+      <footer className="flex justify-center py-8 bg-gray-50">
        
       </footer>
     </div>
