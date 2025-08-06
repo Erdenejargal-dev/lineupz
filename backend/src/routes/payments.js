@@ -1,7 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const paymentController = require('../controllers/paymentController');
 const auth = require('../middleware/auth');
+
+// Import payment controller with error handling
+let paymentController;
+try {
+  paymentController = require('../controllers/paymentController');
+} catch (error) {
+  console.error('Error loading payment controller:', error);
+  // Create dummy functions to prevent server crash
+  paymentController = {
+    handleWebhook: (req, res) => res.status(503).json({ error: 'Payment service temporarily unavailable' }),
+    createSubscriptionPayment: (req, res) => res.status(503).json({ error: 'Payment service temporarily unavailable' }),
+    createAppointmentPayment: (req, res) => res.status(503).json({ error: 'Payment service temporarily unavailable' }),
+    createInvoice: (req, res) => res.status(503).json({ error: 'Payment service temporarily unavailable' }),
+    getUserPayments: (req, res) => res.status(503).json({ error: 'Payment service temporarily unavailable' }),
+    getPayment: (req, res) => res.status(503).json({ error: 'Payment service temporarily unavailable' }),
+    getPaymentStats: (req, res) => res.status(503).json({ error: 'Payment service temporarily unavailable' })
+  };
+}
 
 // Public routes
 router.post('/webhook', paymentController.handleWebhook);
