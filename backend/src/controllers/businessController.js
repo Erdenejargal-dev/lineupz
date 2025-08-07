@@ -107,25 +107,42 @@ const registerBusiness = async (req, res) => {
     await business.save();
 
     // Create BYL payment for business subscription
-    const bylPayment = await bylService.createSubscriptionCheckout({
-      planName: `Business Registration - ${planDetails.name}`,
-      amount: planDetails.price,
-      customerEmail: contact.email,
-      clientReferenceId: business._id.toString(),
-      successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/business/payment/success?businessId=${business._id}`,
-      cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/business/payment/cancel?businessId=${business._id}`
-    });
+    try {
+      const bylPayment = await bylService.createSubscriptionCheckout({
+        planName: `Business Registration - ${planDetails.name}`,
+        amount: planDetails.price,
+        customerEmail: contact.email,
+        clientReferenceId: business._id.toString(),
+        successUrl: `${process.env.FRONTEND_URL || 'https://tabi.mn'}/business/payment/success?businessId=${business._id}`,
+        cancelUrl: `${process.env.FRONTEND_URL || 'https://tabi.mn'}/business/payment/cancel?businessId=${business._id}`
+      });
 
-    res.json({
-      success: true,
-      business: {
-        id: business._id,
-        name: business.name,
-        plan: business.subscription.plan,
-        price: business.subscription.price
-      },
-      paymentUrl: bylPayment.checkout_url
-    });
+      res.json({
+        success: true,
+        business: {
+          id: business._id,
+          name: business.name,
+          plan: business.subscription.plan,
+          price: business.subscription.price
+        },
+        paymentUrl: bylPayment.checkout_url || bylPayment.url
+      });
+    } catch (bylError) {
+      console.error('BYL payment creation failed:', bylError);
+      
+      // Return success with business created, but payment failed
+      res.json({
+        success: true,
+        business: {
+          id: business._id,
+          name: business.name,
+          plan: business.subscription.plan,
+          price: business.subscription.price
+        },
+        paymentUrl: null,
+        message: 'Business registered. Payment system temporarily unavailable.'
+      });
+    }
 
   } catch (error) {
     console.error('Error registering business:', error);
