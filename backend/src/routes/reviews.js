@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 // Import controller functions with error handling
 let reviewController;
@@ -27,18 +27,18 @@ const {
 } = reviewController;
 
 // Submit a review (requires authentication)
-router.post('/submit', auth, submitReview);
+router.post('/submit', authenticateToken, submitReview);
 
 // Get reviews for a business (public)
 router.get('/business/:businessId', getBusinessReviews);
 
 // Get user's reviews (requires authentication)
-router.get('/my-reviews', auth, getUserReviews);
+router.get('/my-reviews', authenticateToken, getUserReviews);
 
 // Get services that can be reviewed (requires authentication)
-router.get('/reviewable', auth, getReviewableServices);
+router.get('/reviewable', authenticateToken, getReviewableServices);
 
 // Business owner: Respond to a review (requires authentication)
-router.post('/:reviewId/respond', auth, respondToReview);
+router.post('/:reviewId/respond', authenticateToken, respondToReview);
 
 module.exports = router;

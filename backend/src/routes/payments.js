@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 // Import payment controller with error handling
 let paymentController;
@@ -25,8 +25,8 @@ router.post('/webhook', paymentController.handleWebhook);
 
 // Protected routes (require authentication)
 router.use((req, res, next) => {
-  if (typeof auth === 'function') {
-    return auth(req, res, next);
+  if (typeof authenticateToken === 'function') {
+    return authenticateToken(req, res, next);
   } else {
     console.error('Auth middleware not properly loaded');
     return res.status(500).json({ error: 'Authentication service unavailable' });
