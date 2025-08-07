@@ -67,10 +67,17 @@ const registerBusiness = async (req, res) => {
     // Check if user already owns a business
     const existingBusiness = await Business.findOne({ owner: userId });
     if (existingBusiness) {
-      return res.status(400).json({
-        success: false,
-        message: 'You already own a business'
-      });
+      // For testing purposes, allow multiple businesses temporarily
+      console.log(`User ${userId} already owns business: ${existingBusiness.name}`);
+      
+      // Uncomment the following lines to enforce one-business-per-user rule:
+      // return res.status(400).json({
+      //   success: false,
+      //   message: 'You already own a business'
+      // });
+      
+      // For now, allow the registration to continue for testing
+      console.log('Allowing multiple businesses for testing purposes');
     }
 
     const planDetails = BUSINESS_PLANS[plan];

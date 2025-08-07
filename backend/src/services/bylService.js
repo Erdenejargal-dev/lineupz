@@ -18,6 +18,11 @@ class BylService {
 
   // Helper method to make API requests
   async makeRequest(endpoint, method = 'GET', data = null) {
+    // Validate credentials
+    if (!this.apiToken || !this.projectId) {
+      throw new Error('BYL API credentials not configured. Please check BYL_API_TOKEN and BYL_PROJECT_ID environment variables.');
+    }
+
     const url = `${this.apiUrl}/projects/${this.projectId}${endpoint}`;
     
     const options = {
@@ -34,7 +39,7 @@ class BylService {
     }
 
     try {
-      console.log('BYL API Request:', method, url, data);
+      console.log('BYL API Request:', method, url, data ? 'Data provided' : 'No data');
       const response = await fetch(url, options);
       
       let result;
@@ -42,13 +47,16 @@ class BylService {
         result = await response.json();
       } catch (parseError) {
         console.error('Failed to parse BYL API response as JSON:', parseError);
-        throw new Error(`BYL API returned invalid JSON: ${response.status}`);
+        const responseText = await response.text();
+        console.error('Raw response:', responseText);
+        throw new Error(`BYL API returned invalid JSON: ${response.status} - ${responseText}`);
       }
       
       console.log('BYL API Response:', response.status, result);
       
       if (!response.ok) {
-        throw new Error(`BYL API Error: ${response.status} - ${JSON.stringify(result)}`);
+        const errorMessage = result.message || result.error || JSON.stringify(result);
+        throw new Error(`BYL API Error: ${response.status} - ${errorMessage}`);
       }
       
       return result;
