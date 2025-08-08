@@ -4,6 +4,21 @@ const User = require('../models/User');
 const Subscription = require('../models/Subscription');
 const { updateUsage } = require('./subscriptionController');
 
+// Simple in-memory cache for line code lookups (TTL 60s)
+const lineCache = new Map(); // key: code, value: { ts, data }
+const CACHE_TTL = 60 * 1000;
+
+function getCachedLine(code) {
+  const entry = lineCache.get(code);
+  if (entry && (Date.now() - entry.ts) < CACHE_TTL) return entry.data;
+  lineCache.delete(code);
+  return null;
+}
+
+function setCachedLine(code, data) {
+  lineCache.set(code, { ts: Date.now(), data });
+}
+
 // Generate unique 6-digit line code
 const generateLineCode = async () => {
   let code;
@@ -375,6 +390,43 @@ const getLineByCode = async (req, res) => {
       message: 'Failed to get line information'
     });
   }
+
+  // Lightweight validate endpoint optimized for high-frequency checks.
+  // Uses in-memory cache to reduce DB load and returns a small payload.
+  // NOTE: Defined at module-level (not nested) so it can be wired in routes.
+  const validateLineCode = async (req, res) => {
+    try {
+      const { code } = req.params;
+
+      if (!code || code.length !== 6) {
+        return res.status(400).json({ success: false, valid: false, message: 'Invalid line code format' });
+      }
+
+      // Try cache first
+      const cached = getCachedLine(code);
+      if (cached) {
+        return res.json({ success: true, valid: true, queueCount: cached.queueCount, estimatedWaitTime: cached.estimatedWaitTime });
+      }
+
+      // Minimal DB lookup (select only what we need)
+      const line = await Line.findOne({ lineCode: code, isActive: true }).select('_id settings');
+      if (!line) {
+        return res.status(404).json({ success: false, valid: false, message: 'Line not found' });
+      }
+
+      // Compute light-weight stats
+      const queueCount = await LineJoiner.countDocuments({ line: line._id, status: 'waiting' });
+      const estimatedWaitTime = queueCount * (line.settings?.estimatedServiceTime || 5);
+
+      // Cache result
+      setCachedLine(code, { queueCount, estimatedWaitTime });
+
+      return res.json({ success: true, valid: true, queueCount, estimatedWaitTime });
+    } catch (err) {
+      console.error('Validate line code error:', err);
+      return res.status(500).json({ success: false, valid: false, message: 'Validation failed' });
+    }
+  };
 };
 
 // Get creator's lines
@@ -784,6 +836,7 @@ const deleteLine = async (req, res) => {
 module.exports = {
   createLine,
   getLineByCode,
+  validateLineCode, // lightweight validate endpoint for high-frequency checks
   getMyLines,
   getLineDetails,
   updateLine,
