@@ -39,18 +39,20 @@ export default function QuickJoinForm() {
       const controller = new AbortController();
       checkControllerRef.current = controller;
 
-      fetch(`${API_BASE_URL}/lines/code/${lineCode}`, {
+      // Use lightweight validate endpoint for high-frequency checks
+      fetch(`${API_BASE_URL}/lines/validate/${lineCode}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
       })
         .then(async (res) => {
+          // For validate endpoint we expect a small payload { valid: true, queueCount, estimatedWaitTime }
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
             setIsValid(false);
             setError(data?.message || 'Line not found');
           } else {
-            setIsValid(true);
+            setIsValid(!!data.valid);
             setError('');
           }
         })

@@ -15,6 +15,7 @@ export default function Home() {
   const cardRef = useRef(null);
   const shapeARef = useRef(null);
   const shapeBRef = useRef(null);
+  const illustrationRef = useRef(null);
 
   useEffect(() => {
     // Staggered entrance for headline, sub and CTAs
@@ -66,9 +67,38 @@ export default function Home() {
       opacity: 0.7
     });
 
+    // Illustration micro animations (stroke draw + subtle bob)
+    const ill = illustrationRef.current;
+    if (ill) {
+      const paths = ill.querySelectorAll('path, circle, rect, line');
+      paths.forEach((p) => {
+        const length = p.getTotalLength ? p.getTotalLength() : 100;
+        p.style.strokeDasharray = length;
+        p.style.strokeDashoffset = length;
+      });
+
+      const drawTl = gsap.timeline({ delay: 0.5 });
+      drawTl.to(paths, {
+        strokeDashoffset: 0,
+        duration: 1.2,
+        ease: 'power2.out',
+        stagger: 0.06,
+        onComplete: () => {
+          // After draw, add a gentle scale + floating loop to the whole illustration
+          gsap.to(ill, {
+            y: -6,
+            duration: 6,
+            yoyo: true,
+            repeat: -1,
+            ease: 'sine.inOut'
+          });
+        }
+      });
+    }
+
     return () => {
       tl.kill();
-      gsap.killTweensOf([shapeARef.current, shapeBRef.current, cardRef.current, titleRef.current, subRef.current, ctasRef.current, statsRef.current]);
+      gsap.killTweensOf([shapeARef.current, shapeBRef.current, cardRef.current, titleRef.current, subRef.current, ctasRef.current, statsRef.current, illustrationRef.current]);
     };
   }, []);
 
@@ -147,7 +177,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right: Quick Join card */}
+            {/* Right: Quick Join card + illustration */}
             <div className="lg:col-span-5">
               <div ref={cardRef} className="relative opacity-0">
                 <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 max-w-md mx-auto ring-1 ring-black/5">
@@ -165,6 +195,17 @@ export default function Home() {
 
                 <div className="absolute -top-4 right-6 bg-white/10 px-3 py-1 rounded-full text-xs text-white/90 backdrop-blur-sm">
                   Live demo
+                </div>
+
+                {/* Lightweight SVG illustration (animated via GSAP) */}
+                <div className="absolute -left-10 -bottom-12 w-44 h-44 pointer-events-none" aria-hidden>
+                  <svg ref={illustrationRef} viewBox="0 0 120 120" className="w-full h-full">
+                    <rect x="8" y="12" width="104" height="96" rx="12" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="2"/>
+                    <circle cx="36" cy="36" r="8" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="2"/>
+                    <path d="M24 72c8-6 24-6 36 0s20 10 28 6" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="2" strokeLinecap="round"/>
+                    <line x1="24" y1="54" x2="96" y2="54" stroke="rgba(0,0,0,0.06)" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M44 26c6 4 12 4 18 0" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="1.8" strokeLinecap="round"/>
+                  </svg>
                 </div>
               </div>
             </div>
