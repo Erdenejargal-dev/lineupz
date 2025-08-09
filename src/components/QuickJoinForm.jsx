@@ -2,7 +2,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle, Loader2 } from 'lucide-react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
+const API_BASE_URL = (() => {
+  // Resolve the public API base URL robustly at build-time.
+  // Prefer NEXT_PUBLIC_API_URL if it already contains the `/api` path.
+  // Otherwise, build from NEXT_PUBLIC_API_BASE_URL and append `/api` (trimming trailing slashes).
+  try {
+    if (typeof process !== 'undefined') {
+      if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+      if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+        return `${process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, '')}/api`;
+      }
+    }
+  } catch (e) {
+    // noop - fallback to empty string
+  }
+  return '';
+})();
 
 export default function QuickJoinForm() {
   const [lineCode, setLineCode] = useState('');
@@ -30,6 +45,13 @@ export default function QuickJoinForm() {
 
     if (!lineCode || lineCode.length !== 6) {
       setChecking(false);
+      return;
+    }
+
+    // Ensure API base configured
+    if (!API_BASE_URL) {
+      setChecking(false);
+      setError('Configuration error: API base URL not set');
       return;
     }
 
@@ -85,6 +107,11 @@ export default function QuickJoinForm() {
       return;
     }
     lastSubmitRef.current = now;
+
+    if (!API_BASE_URL) {
+      setError('Configuration error: API base URL not set');
+      return;
+    }
 
     if (!lineCode || lineCode.length !== 6) {
       setError('Please enter a valid 6-digit line code');
