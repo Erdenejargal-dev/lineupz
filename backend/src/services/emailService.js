@@ -3,11 +3,15 @@ const nodemailer = require('nodemailer');
 class EmailService {
   constructor() {
     this.transporter = null;
-    this.initializeTransporter();
+    // Don't initialize in constructor, do it lazily
   }
 
   initializeTransporter() {
-    // Only initialize if email credentials are provided
+    // Only initialize if email credentials are provided and not already initialized
+    if (this.transporter) {
+      return; // Already initialized
+    }
+    
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
       try {
         const config = {
@@ -42,6 +46,9 @@ class EmailService {
   }
 
   async sendVerificationEmail(email, otp) {
+    // Initialize transporter if not already done
+    this.initializeTransporter();
+    
     // If no transporter, return success but log that email wasn't sent
     if (!this.transporter) {
       console.log(`Email service not configured. OTP for ${email}: ${otp}`);
@@ -132,6 +139,9 @@ class EmailService {
 
   // Test email configuration
   async testConnection() {
+    // Initialize transporter if not already done
+    this.initializeTransporter();
+    
     if (!this.transporter) {
       return { success: false, message: 'Email service not configured' };
     }
