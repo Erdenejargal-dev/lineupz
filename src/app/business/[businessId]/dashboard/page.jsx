@@ -1,11 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Building, Users, TrendingUp, Clock, Check, X, Mail, Phone, User, ArrowLeft } from 'lucide-react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
 export default function BusinessDashboardPage() {
+  const params = useParams();
+  const businessId = params.businessId;
+  
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
   const [business, setBusiness] = useState(null);
@@ -23,24 +27,18 @@ export default function BusinessDashboardPage() {
     }
     setToken(savedToken);
     fetchBusinessData(savedToken);
-  }, []);
+  }, [businessId]);
 
   const fetchBusinessData = async (authToken) => {
     try {
-      // Get user's business
-      const businessResponse = await fetch(`${API_BASE_URL}/business/my-business`, {
-        headers: { 'Authorization': `Bearer ${authToken}` }
-      });
-      
-      const businessData = await businessResponse.json();
-      if (!businessData.ownedBusiness) {
+      // Validate business ID
+      if (!businessId || businessId === 'undefined') {
+        setError('Invalid business ID');
         window.location.href = '/profile';
         return;
       }
 
-      const businessId = businessData.ownedBusiness._id;
-
-      // Get dashboard data
+      // Get dashboard data directly using the business ID from URL
       const dashboardResponse = await fetch(`${API_BASE_URL}/business/${businessId}/dashboard`, {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
@@ -49,6 +47,9 @@ export default function BusinessDashboardPage() {
       if (dashboardData.success) {
         setBusiness(dashboardData.business);
         setArtistStats(dashboardData.artistStats);
+      } else {
+        setError(dashboardData.message || 'Failed to load business data');
+        return;
       }
 
       // Get join requests
@@ -71,7 +72,7 @@ export default function BusinessDashboardPage() {
 
   const handleRequestResponse = async (requestId, action) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/business/${business.id}/join-requests/${requestId}/respond`, {
+      const response = await fetch(`${API_BASE_URL}/business/${businessId}/join-requests/${requestId}/respond`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

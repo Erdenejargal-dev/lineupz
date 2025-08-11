@@ -271,7 +271,7 @@ export default function ProfilePage() {
                 You own <strong>{businessData.ownedBusiness.name}</strong>
               </p>
               <button
-                onClick={() => window.location.href = `/business/${businessData.ownedBusiness.id}/dashboard`}
+                onClick={() => window.location.href = `/business/${businessData.ownedBusiness._id}/dashboard`}
                 className="mt-2 text-green-700 hover:text-green-900 underline text-sm"
               >
                 Manage Business →
