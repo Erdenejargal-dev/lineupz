@@ -197,7 +197,7 @@ businessSchema.index({ 'subscription.isActive': 1 });
 
 // Virtual for current artist count
 businessSchema.virtual('currentArtistCount').get(function() {
-  return this.artists.filter(artist => artist.isActive).length;
+  return this.artists ? this.artists.filter(artist => artist.isActive).length : 0;
 });
 
 // Method to check if business can add more artists
