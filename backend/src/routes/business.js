@@ -3,6 +3,7 @@ const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
 const {
   getBusinessPlans,
+  searchBusinesses,
   registerBusiness,
   getUserBusiness,
   sendJoinRequest,
@@ -15,6 +16,9 @@ const {
 
 // Get all business plans (public)
 router.get('/plans', getBusinessPlans);
+
+// Search businesses (requires auth)
+router.get('/search', authenticateToken, searchBusinesses);
 
 // Register a new business (requires auth)
 router.post('/register', authenticateToken, registerBusiness);

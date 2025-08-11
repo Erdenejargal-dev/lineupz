@@ -43,6 +43,63 @@ const getBusinessPlans = async (req, res) => {
   }
 };
 
+// Search businesses
+const searchBusinesses = async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim().length < 2) {
+      return res.json({
+        success: true,
+        businesses: []
+      });
+    }
+
+    // Search businesses by name, case-insensitive
+    const businesses = await Business.find({
+      name: { $regex: new RegExp(query.trim(), 'i') },
+      status: 'active'
+    })
+    .select('name description category subscription currentArtistCount contact')
+    .limit(10)
+    .sort({ name: 1 });
+
+    // Format response with subscription plan details
+    const formattedBusinesses = businesses.map(business => {
+      const planDetails = BUSINESS_PLANS[business.subscription.plan] || {};
+      
+      return {
+        id: business._id,
+        name: business.name,
+        description: business.description,
+        category: business.category,
+        currentArtistCount: business.currentArtistCount,
+        subscription: {
+          plan: business.subscription.plan,
+          planName: planDetails.name || business.subscription.plan,
+          maxArtists: planDetails.maxArtists || 0,
+          features: planDetails.features || []
+        },
+        contact: {
+          email: business.contact.email
+        }
+      };
+    });
+
+    res.json({
+      success: true,
+      businesses: formattedBusinesses
+    });
+
+  } catch (error) {
+    console.error('Error searching businesses:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to search businesses'
+    });
+  }
+};
+
 // Register a new business
 const registerBusiness = async (req, res) => {
   try {
@@ -632,6 +689,7 @@ const removeArtist = async (req, res) => {
 
 module.exports = {
   getBusinessPlans,
+  searchBusinesses,
   registerBusiness,
   getUserBusiness,
   sendJoinRequest,

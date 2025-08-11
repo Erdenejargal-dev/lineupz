@@ -31,6 +31,9 @@ export default function ProfilePage() {
 
   const [showJoinBusiness, setShowJoinBusiness] = useState(false);
   const [joiningBusiness, setJoiningBusiness] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
 
   const fetchBusinessData = async () => {
     if (!token) return;
@@ -327,22 +330,120 @@ export default function ProfilePage() {
                     Join Business
                   </button>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-blue-900 mb-1">
-                        Business Name
+                        Search Businesses
                       </label>
                       <input
                         type="text"
                         value={businessForm.businessName}
-                        onChange={(e) => setBusinessForm({ businessName: e.target.value })}
+                        onChange={async (e) => {
+                          const query = e.target.value;
+                          setBusinessForm({ businessName: query });
+                          
+                          if (query.length >= 2) {
+                            setSearching(true);
+                            try {
+                              const response = await fetch(`${API_BASE_URL}/business/search?query=${encodeURIComponent(query)}`, {
+                                headers: {
+                                  'Authorization': `Bearer ${token}`
+                                }
+                              });
+                              
+                              const data = await response.json();
+                              if (data.success) {
+                                setSearchResults(data.businesses);
+                              }
+                            } catch (error) {
+                              console.error('Search error:', error);
+                            } finally {
+                              setSearching(false);
+                            }
+                          } else {
+                            setSearchResults([]);
+                          }
+                        }}
                         className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter the exact business name"
+                        placeholder="Type to search for businesses..."
                       />
+                      {searching && (
+                        <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Searching...
+                        </div>
+                      )}
                     </div>
-                    <div className="flex gap-2">
+
+                    {/* Search Results */}
+                    {searchResults.length > 0 && (
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        <p className="text-sm font-medium text-blue-900">Found {searchResults.length} business{searchResults.length > 1 ? 'es' : ''}:</p>
+                        {searchResults.map((business) => (
+                          <div 
+                            key={business.id} 
+                            className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                              selectedBusiness?.id === business.id 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
+                            }`}
+                            onClick={() => setSelectedBusiness(business)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900">{business.name}</h4>
+                                {business.description && (
+                                  <p className="text-sm text-gray-600 mt-1">{business.description}</p>
+                                )}
+                                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                  <span className="capitalize">{business.category}</span>
+                                  <span>{business.currentArtistCount}/{business.subscription.maxArtists} Artists</span>
+                                </div>
+                              </div>
+                              <div className="ml-4 text-right">
+                                <div className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
+                                  {business.subscription.planName}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Subscription Features */}
+                            <div className="mt-2 pt-2 border-t border-gray-100">
+                              <p className="text-xs font-medium text-gray-700 mb-1">Plan Features:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {business.subscription.features.slice(0, 3).map((feature, index) => (
+                                  <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                    {feature}
+                                  </span>
+                                ))}
+                                {business.subscription.features.length > 3 && (
+                                  <span className="text-xs text-gray-500">
+                                    +{business.subscription.features.length - 3} more
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* No Results */}
+                    {businessForm.businessName.length >= 2 && searchResults.length === 0 && !searching && (
+                      <div className="text-sm text-gray-500 text-center py-4">
+                        No businesses found matching "{businessForm.businessName}"
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-2">
                       <button
                         onClick={async () => {
+                          if (!selectedBusiness) {
+                            setError('Please select a business to join');
+                            return;
+                          }
+
                           try {
                             setJoiningBusiness(true);
                             const response = await fetch(`${API_BASE_URL}/business/join-request`, {
@@ -352,8 +453,8 @@ export default function ProfilePage() {
                                 'Authorization': `Bearer ${token}`
                               },
                               body: JSON.stringify({ 
-                                businessName: businessForm.businessName,
-                                message: `Hi, I would like to join ${businessForm.businessName} as an artist. Please review my request.`
+                                businessName: selectedBusiness.name,
+                                message: `Hi, I would like to join ${selectedBusiness.name} as an artist. I'm interested in working with your ${selectedBusiness.subscription.planName} and contributing to your team. Please review my request.`
                               })
                             });
 
@@ -362,6 +463,8 @@ export default function ProfilePage() {
                               setSuccess('Join request sent successfully! The business owner will review your request and notify you via email.');
                               setShowJoinBusiness(false);
                               setBusinessForm({ businessName: '' });
+                              setSearchResults([]);
+                              setSelectedBusiness(null);
                             } else {
                               setError(data.message || 'Failed to send join request');
                             }
@@ -371,7 +474,7 @@ export default function ProfilePage() {
                             setJoiningBusiness(false);
                           }
                         }}
-                        disabled={joiningBusiness || !businessForm.businessName}
+                        disabled={joiningBusiness || !selectedBusiness}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm flex items-center gap-2"
                       >
                         {joiningBusiness ? (
@@ -387,12 +490,21 @@ export default function ProfilePage() {
                         onClick={() => {
                           setShowJoinBusiness(false);
                           setBusinessForm({ businessName: '' });
+                          setSearchResults([]);
+                          setSelectedBusiness(null);
                         }}
                         className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors text-sm"
                       >
                         Cancel
                       </button>
                     </div>
+
+                    {selectedBusiness && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-sm font-medium text-blue-900">Selected Business:</p>
+                        <p className="text-sm text-blue-800">{selectedBusiness.name} - {selectedBusiness.subscription.planName}</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
