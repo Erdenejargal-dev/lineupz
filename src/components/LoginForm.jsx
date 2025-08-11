@@ -139,13 +139,13 @@ const LoginForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
             {step === 'phone' ? 'Sign in to Tabi' : 'Verify your phone'}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             {step === 'phone' 
               ? 'Enter your phone number to get started'
               : `Enter the code sent to ${phone}`
@@ -154,13 +154,13 @@ const LoginForm = () => {
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded">
             {error}
           </div>
         )}
 
         {message && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          <div className="bg-green-100 dark:bg-green-900/20 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-400 px-4 py-3 rounded">
             {message}
           </div>
         )}
@@ -168,7 +168,7 @@ const LoginForm = () => {
         {step === 'phone' ? (
           <div className="mt-8 space-y-6">
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
                 Phone Number
               </label>
               <input
@@ -178,10 +178,10 @@ const LoginForm = () => {
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10"
+                className="input-field appearance-none relative block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring focus:z-10"
                 placeholder="+1234567890"
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Include country code (e.g., +1 for US)
               </p>
             </div>
@@ -189,7 +189,7 @@ const LoginForm = () => {
             <button
               onClick={sendOTP}
               disabled={loading || !phone}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Sending...' : 'Send OTP'}
             </button>
@@ -198,7 +198,7 @@ const LoginForm = () => {
           <div className="mt-8 space-y-6">
             {isSignup && (
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
                   Your Name (Optional)
                 </label>
                 <input
@@ -207,14 +207,14 @@ const LoginForm = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="input-field appearance-none relative block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
                   placeholder="Enter your name"
                 />
               </div>
             )}
 
             <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="otp" className="block text-sm font-medium text-foreground mb-2">
                 Verification Code
               </label>
               <input
@@ -224,7 +224,7 @@ const LoginForm = () => {
                 required
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-2xl font-mono tracking-widest"
+                className="input-field appearance-none relative block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring text-center text-2xl font-mono tracking-widest"
                 placeholder="123456"
                 maxLength={6}
               />
@@ -233,14 +233,14 @@ const LoginForm = () => {
             <div className="flex gap-3">
               <button
                 onClick={resetForm}
-                className="flex-1 py-3 px-4 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                className="flex-1 py-3 px-4 border border-input text-sm font-medium rounded-lg text-foreground bg-background hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring"
               >
                 Back
               </button>
               <button
                 onClick={verifyOTP}
                 disabled={loading || !otp}
-                className="flex-1 py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Verifying...' : (isSignup ? 'Create Account' : 'Sign In')}
               </button>
@@ -249,7 +249,7 @@ const LoginForm = () => {
         )}
 
         <div className="text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             By continuing, you agree to receive SMS messages for authentication.
           </p>
         </div>

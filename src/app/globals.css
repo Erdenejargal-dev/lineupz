@@ -119,6 +119,45 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Ensure input fields have proper text visibility */
+  input, textarea, select {
+    @apply text-foreground;
+  }
+  
+  /* Fix placeholder text visibility */
+  input::placeholder, textarea::placeholder {
+    @apply text-muted-foreground;
+  }
+  
+  /* Ensure form elements are visible in all themes */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="tel"], 
+  input[type="password"], 
+  input[type="number"], 
+  textarea, 
+  select {
+    @apply text-foreground bg-background border-input;
+  }
+  
+  /* Fix autofill styles that can cause white text on white background */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--background) inset !important;
+    -webkit-text-fill-color: var(--foreground) !important;
+  }
+  
+  /* Dark mode autofill fix */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--background) inset !important;
+    -webkit-text-fill-color: var(--foreground) !important;
+  }
 }
 
 /* Hide scrollbar for horizontal navigation */
@@ -128,4 +167,20 @@
 }
 .scrollbar-hide::-webkit-scrollbar { 
   display: none;  /* Safari and Chrome */
+}
+
+/* Additional input field fixes for better visibility */
+@layer components {
+  .input-field {
+    @apply bg-background text-foreground border-input placeholder:text-muted-foreground;
+  }
+  
+  .input-field:focus {
+    @apply ring-ring border-ring;
+  }
+  
+  /* Ensure search inputs are visible */
+  input[type="search"] {
+    @apply text-foreground bg-background;
+  }
 }
