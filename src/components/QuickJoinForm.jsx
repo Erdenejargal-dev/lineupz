@@ -22,7 +22,7 @@ const API_BASE_URL = (() => {
 export default function QuickJoinForm() {
   const [lineCode, setLineCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(false); // background code existence check
+  const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
   const [isValid, setIsValid] = useState(false);
   const lastSubmitRef = useRef(0);
@@ -48,27 +48,23 @@ export default function QuickJoinForm() {
       return;
     }
 
-    // Ensure API base configured
     if (!API_BASE_URL) {
       setChecking(false);
       setError('Configuration error: API base URL not set');
       return;
     }
 
-    // Debounce so we don't fire immediately for accidental typing/paste
     setChecking(true);
     debounceTimerRef.current = setTimeout(() => {
       const controller = new AbortController();
       checkControllerRef.current = controller;
 
-      // Use lightweight validate endpoint for high-frequency checks
       fetch(`${API_BASE_URL}/lines/validate/${lineCode}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
       })
         .then(async (res) => {
-          // For validate endpoint we expect a small payload { valid: true, queueCount, estimatedWaitTime }
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
             setIsValid(false);
@@ -100,7 +96,6 @@ export default function QuickJoinForm() {
   }, [lineCode]);
 
   const handleJoin = async () => {
-    // prevent double submits within 1s
     const now = Date.now();
     if (lastSubmitRef.current && now - lastSubmitRef.current < 1000) {
       setError('Please wait a moment before trying again.');
@@ -133,7 +128,6 @@ export default function QuickJoinForm() {
         throw new Error(data?.message || 'Line not found');
       }
 
-      // success: redirect
       window.location.href = `/join?code=${lineCode}`;
     } catch (err) {
       setError(err?.message || 'Something went wrong. Please try again.');
@@ -151,10 +145,19 @@ export default function QuickJoinForm() {
 
   return (
     <div className="w-full max-w-md mx-auto">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-3">
+          Join a Line
+        </h2>
+        <p className="text-gray-600">
+          Enter the 6-digit line code to join
+        </p>
+      </div>
+
       <div className="space-y-4">
         <div>
-          <label htmlFor="quickLineCode" className="block text-sm font-medium text-gray-700 mb-2">
-            Join with Line Code
+          <label htmlFor="quickLineCode" className="block text-sm font-semibold text-gray-900 mb-2">
+            Line Code
           </label>
 
           <div className="relative">
@@ -169,30 +172,28 @@ export default function QuickJoinForm() {
               onChange={(e) => {
                 const digits = (e.target.value || '').replace(/\D/g, '').slice(0, 6);
                 setLineCode(digits);
-                // optimistic local validity; remote check will set isValid once verified
                 setIsValid(digits.length === 6 && !checking && !error);
               }}
               onKeyDown={handleKeyDown}
-              className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-xl font-mono tracking-widest pr-12"
-              placeholder="123456"
+              className="appearance-none relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-2xl font-mono tracking-[0.5em] pr-12"
+              placeholder="000000"
               maxLength={6}
             />
 
-            {/* Inline status indicator (right side of input) */}
             <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
               {checking ? (
                 <Loader2 className="h-5 w-5 text-gray-400 animate-spin" aria-hidden />
               ) : isValid ? (
                 <CheckCircle className="h-5 w-5 text-green-500" aria-hidden />
               ) : (
-                <div className="h-5 w-5" /> // placeholder spacing
+                <div className="h-5 w-5" />
               )}
             </div>
           </div>
         </div>
 
         {error && (
-          <div role="alert" className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
+          <div role="alert" className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
           </div>
         )}
@@ -200,16 +201,19 @@ export default function QuickJoinForm() {
         <button
           onClick={handleJoin}
           disabled={loading || !lineCode || lineCode.length !== 6 || checking}
-          className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex justify-center py-3.5 px-4 border border-transparent text-base font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
           aria-disabled={loading || !lineCode || lineCode.length !== 6 || checking}
         >
-          {loading ? 'Checking...' : 'Join Line'}
+          {loading ? 'Checking...' : 'Check Line Code'}
         </button>
       </div>
 
-      <div className="mt-4 text-center">
-        <p className="text-xs text-gray-500">
-          Enter the 6-digit code from your line creator
+      <div className="mt-6 text-center">
+        <p className="text-sm text-gray-600">
+          Don't have an account?{' '}
+          <a href="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+            Sign up here
+          </a>
         </p>
       </div>
     </div>

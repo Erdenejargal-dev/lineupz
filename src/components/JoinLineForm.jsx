@@ -130,16 +130,16 @@ const JoinLineForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-lg w-full space-y-6">
-        <div>
-          <h2 className="mt-4 text-center text-2xl md:text-3xl font-bold text-gray-900">
+        <div className="text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
             {step === 'code' ? 'Join a Line' : 
              step === 'preview' ? 'Line Details' : 
              step === 'booking' ? 'Book Appointment' :
              'Success!'}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 px-2">
+          <p className="text-base text-gray-600">
             {step === 'code' 
               ? 'Enter the 6-digit line code to join' 
               : step === 'preview'
@@ -204,7 +204,7 @@ const JoinLineForm = () => {
 const CodeEntryStep = ({ lineCode, setLineCode, onSubmit, loading, token }) => (
   <div className="space-y-6">
     <div>
-      <label htmlFor="lineCode" className="block text-sm font-medium text-gray-700 mb-2">
+      <label htmlFor="lineCode" className="block text-sm font-semibold text-gray-900 mb-2">
         Line Code
       </label>
       <input
@@ -214,8 +214,8 @@ const CodeEntryStep = ({ lineCode, setLineCode, onSubmit, loading, token }) => (
         required
         value={lineCode}
         onChange={(e) => setLineCode(e.target.value.toUpperCase())}
-        className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-xl md:text-2xl font-mono tracking-widest"
-        placeholder="123456"
+        className="appearance-none relative block w-full px-4 py-3 border-2 border-gray-300 placeholder-gray-400 text-gray-900 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-2xl font-mono tracking-[0.5em]"
+        placeholder="000000"
         maxLength={6}
       />
     </div>
@@ -223,18 +223,18 @@ const CodeEntryStep = ({ lineCode, setLineCode, onSubmit, loading, token }) => (
     <button
       onClick={onSubmit}
       disabled={loading || !lineCode || lineCode.length !== 6}
-      className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full flex justify-center py-3.5 px-4 border border-transparent text-base font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {loading ? 'Checking...' : 'Check Line Code'}
     </button>
 
     {!token && (
       <div className="text-center">
-        <p className="text-xs text-gray-500">
+        <p className="text-sm text-gray-600">
           Don't have an account?{' '}
           <button
             onClick={() => window.location.href = '/login'}
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="text-blue-600 hover:text-blue-700 font-semibold"
           >
             Sign up here
           </button>
