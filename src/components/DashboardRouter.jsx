@@ -11,7 +11,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
 
 // Add this new component to your DashboardRouter
 const MyAppointments = ({ token }) => {
-  const [appointments, setAppointments] = useState([]);
+  const [appointments, sestAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
